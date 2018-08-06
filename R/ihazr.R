@@ -30,14 +30,12 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL) {
 }
 
 #' Widget output function for use in Shiny
-#'
 #' @export
 ihazrOutput <- function(outputId, width = '100%', height = '400px'){
   shinyWidgetOutput(outputId, 'ihazr', width, height, package = 'ihazr')
 }
 
 #' Widget render function for use in Shiny
-#'
 #' @export
 renderIhazr <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
