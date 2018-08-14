@@ -1,8 +1,14 @@
 Package: ihazr
 Title: R Interface to Generate Interactive Hazard Regression Plots
 Version: 0.1.0
-Authors@R: person("C. Jason", "Liang", , "liangcj@gmail.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph)
+Authors@R: c(person("C. Jason", "Liang", , "liangcj@gmail.com", role = c("aut", "cre"),
+    person("Kyle", "Webb", , "kylepwebb1992@gmail.com", role = "ctb")))
+Description: ihazr stands for Interactive Hazard Regression. 
+    It helps to observe changes in the hazrd function for survival data through htmlwidgets.
+    It allows the user to choose what area of the variables they would like to look at over
+    the length of the time of the study. 
 Depends: R (>= 3.2.0)
 License: MIT
+Imports: 
+  htmlwidgets (>= 0.8)
 LazyData: true

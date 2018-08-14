@@ -1,6 +1,7 @@
-#' <Add Title>
+#' ihazr
 #'
-#' <Add Description>
+#' \code{ihazr} interactively updates hazard function for survival anaylisis.
+#' Allows the user to choose subsections of their data they wish to model.
 #'
 #' @import htmlwidgets
 #'
