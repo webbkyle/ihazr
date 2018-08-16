@@ -14,75 +14,80 @@ HTMLWidgets.widget({
 
   },
 
+// renderValue function takes in
+// -el: css elements to be modified by javascript package d3
+// -x: values passed in from R to the widget itself
+// -instance:
   renderValue: function(el, x, instance) {
     var data = HTMLWidgets.dataframeToD3(x);
     var pad = 30;
-//    var w = el.attr("width");
-//    var h = el.attr("height");
     var w = 900;
-    var h = 400;
+    var h = 400
+    var n_col = data.columns;
 
+// sets the relative area for the number of variables besides time and status
     var svgbut = d3.select(el)
         .select("svg")
             .attr("class", "button")
             .attr("width", w)
             .attr("height", h/5);
 
+// sets the relative area for the entire scatterplot svg element
     var svg = d3.select(el).append("svg")
                      .attr("width", w)
                      .attr("height", h);
-//            .attr("class", "scatter")
-//            .attr("width", w)
-//            .attr("height", h);
-//    var svg = d3.select("body")
-//        .append("svg")
-//            .attr("class", "scatter")
-//            .attr("width", w)
-//            .attr("height", h)
+
+// sets the relative area for the hud element of the scatterplot svg element
     var svghud = d3.select(el).append("svg")
                      .attr("class", "hud")
                      .attr("width", w)
                      .attr("height", h/10);
-//    var svghud = d3.select("body")
-//        .append("svg")
-//            .attr("class", "hud")
-//            .attr("width", w)
-//            .attr("height", h/10)        
-//    var svghaz = d3.select("body")
-//        .append("svg")
-//            .attr("width", w)
-//            .attr("height",h)
+
+// sets the relative area for the hazard function element
     var svghaz = d3.select(el).append("svg")
                      .attr("width", w)
                      .attr("height", h);
-//    var data;
+
+// random data setup found later
     var datasub = [];
     var mouse = [900,200];
     var mouseold = [900,200];
+    // cc will start as first data element but will change once clicked
     var cc = "age";
     var freeze = 0;
     var refresh = 0;
 
+// kernelhazardEstimator takes in the type of kernel (e.g. epanechnikovKernel),
+// and maps the density of that kernel for each data point in order to smooth
+// the estimate for the hazard function
     function kernelhazardEstimator(kernel, x) {
       return function(sample) {
         return x.map(function(x) {
-          return [x, d3.sum(sample, function(v) { return v[3]*v[1]*kernel(x - v[0]); })];
+          return [x, d3.sum(sample, function(v) {
+            return v[3]*v[1]*kernel(x - v[0]);
+          })];
         });
       };
     }
 
+// epanechnikov Kernel used for nonparametric density estimation
     function epanechnikovKernel(scale) {
       return function(u) {
-        return Math.abs(u /= scale) <= 1 ? .75 * (1 - u * u) / scale : 0;
+        return Math.abs(u /= scale) <= 1 ? 0.75 * (1 - u * u) / scale : 0;
       };
     }
 
-//    d3.csv("/data/pbcdata.csv", function(d){
-//        d3.csv("/data/swog.csv", function(d){
-//        data = d;
+// other nonparametric kernel smoothing funcitons: gaussian, uniform, triangle,
+// triweight, cosine
 
-        var trange = [d3.min(data, function(d){return +d.time}), d3.max(data, function(d){ return +d.time;})];
-        var covrange = [d3.min(data, function(d){return +d[cc];}), d3.max(data, function(d){return +d[cc];})];
+// range for the time variable of the data imported
+        var trange = [d3.min(data, function(d){return +d.time}),
+          d3.max(data, function(d){ return +d.time;})];
+
+// covrange for the first varibale in the marker list (right now this is "age")
+        var covrange = [d3.min(data, function(d){return +d[cc];}),
+          d3.max(data, function(d){return +d[cc];})];
+
         var xScale = d3.scale.linear()
             .domain(trange)
             .range([pad*1.5, w-pad*1.5]);
@@ -127,7 +132,7 @@ HTMLWidgets.widget({
                 .attr("height", h/5-10)
                 .attr("width", w/(d3.keys(data[1]).length-2) - 10)
                 .style("fill-opacity", 1)
-                .style("fill", "rgb(200,50,50)")
+                .style("fill", "rgb(200,50,50)");
         svgbut.selectAll(".text.buttons")
                 .data(d3.keys(data[1]).slice(2, d3.keys(data[1]).length))
                 .enter()
@@ -142,12 +147,12 @@ HTMLWidgets.widget({
                 .style("font-weight", "bold")
                 .style("font-family", "Courier")
                 .style("font-size", "20px")
-                .text(function(d){return d;}); 
+                .text(function(d){return d;});
         svg.selectAll("circle")
                 .data(data)
                 .enter()
             .append("circle")
-                .attr("cx", function(d){return xScale(+d["time"]);})
+                .attr("cx", function(d){return xScale(+d.time);})
                 .attr("cy", function(d){return yScale(+d[cc]);})
                 .attr("r", 4)
                 .attr("fill", function(d){
@@ -193,9 +198,9 @@ HTMLWidgets.widget({
         datasub.forEach(function(d, i){
             datasub[i][1] = 1/(datasub.length-i);
             if(i>0){
-                datasub[i][2] = datasub[i][1]*datasub[i][3] + datasub[i-1][2]
+                datasub[i][2] = datasub[i][1]*datasub[i][3] + datasub[i-1][2];
             } else{
-                datasub[i][2] = datasub[i][1]*datasub[i][3]
+                datasub[i][2] = datasub[i][1]*datasub[i][3];
             }
         });
 
@@ -213,7 +218,7 @@ HTMLWidgets.widget({
                 .attr("width", w/2.35)
                 .attr("height", h/10)
                 .style("fill", "gray")
-                .style("fill-opacity", "0.4")
+                .style("fill-opacity", "0.4");
         svghud.append("text")
                 .attr("x", pad*1.3)
                 .attr("y", 30)
@@ -237,10 +242,10 @@ HTMLWidgets.widget({
                 .attr("cy", function(d){return d;})
                 .attr("r", 4)
                 .attr("fill", function(d, i){
-                    return i==0 ? "rgb(0,0,180)" : "transparent";
+                    return i===0 ? "rgb(0,0,180)" : "transparent";
                 })
                 .style("stroke-width", function(d, i){
-                    return i==0 ? "0px" : "2px";
+                    return i===0 ? "0px" : "2px";
                 })
                 .style("stroke", "rgb(70,70,70)");
         svghud.append("path")
@@ -261,7 +266,7 @@ HTMLWidgets.widget({
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text(function(d,i){
-                    return i==0 ? "death" : "censored";
+                    return i===0 ? "death" : "censored";
                 });
         // END VERY MESSY LEGEND CODE
         svghud.selectAll("legendtxt2")
@@ -274,8 +279,8 @@ HTMLWidgets.widget({
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text(function(d,i){
-                    return i==0 ? "hazard rate" : "cumulative hazard";
-                }); 
+                    return i===0 ? "hazard rate" : "cumulative hazard";
+                });
         svghaz.append("path")
                 .datum(datasub)
                 .attr("class", "nahazline")
@@ -307,7 +312,7 @@ HTMLWidgets.widget({
                 .call(yAxisNA);
 
         function mgr(){
-            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze==1) && refresh==0){
+            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze===1) && refresh===0){
                 //IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN exit function w/o calculating anything
                 return 0;
             }
@@ -353,7 +358,7 @@ HTMLWidgets.widget({
             freeze = 0;
             refresh = 1;
             var mt = d3.mouse(this)[0];
-            cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[Math.floor(mt/(w/(d3.keys(data[1]).length-2)))]
+            cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[Math.floor(mt/(w/(d3.keys(data[1]).length-2)))];
             covrange = [d3.min(data, function(d){return +d[cc];}), d3.max(data, function(d){return +d[cc];})];
 
             yScale
@@ -361,10 +366,10 @@ HTMLWidgets.widget({
                 .range([h-pad*1.5, pad*1.5]);
             mxtocov
                 .domain([pad*1.5, w-pad*1.5])
-                .range([0, covrange[1]-covrange[0]])
+                .range([0, covrange[1]-covrange[0]]);
             covtoh
                 .domain([0, covrange[1]-covrange[0]])
-                .range([0, h-pad*3])
+                .range([0, h-pad*3]);
             yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
 
             svg.selectAll("circle")
@@ -374,9 +379,9 @@ HTMLWidgets.widget({
             svg.select(".y.axis")
                     .transition().duration(1000)
                     .call(yAxis);
-        }); 
+        });
         svg.on("click", function(){
-            if(freeze==0){
+            if(freeze===0){
                 freeze=1;
                 return 0;
             }

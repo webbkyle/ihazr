@@ -96,9 +96,9 @@ p{
 svg{
     cursor:crosshair;
 }
-svg.button{
+.button{
     cursor: pointer;
 }
-svg.scatter{
+.scatter{
     cursor: ew-resize;
 }

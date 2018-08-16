@@ -9,6 +9,6 @@ Description: ihazr stands for Interactive Hazard Regression.
     the length of the time of the study. 
 Depends: R (>= 3.2.0)
 License: MIT
-Imports: 
-  htmlwidgets (>= 0.8)
+Imports: htmlwidgets (>= 0.8)
 LazyData: true
+RoxygenNote: 6.1.0
