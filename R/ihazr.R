@@ -67,7 +67,7 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL) {
     sizingPolicy = htmlwidgets::sizingPolicy(
       viewer.padding = 0,
       viewer.paneHeight = 200,
-      viewer.suppress = FALSE,
+      viewer.suppress = TRUE,
       viewer.defaultHeight = 200,
       viewer.defaultWidth = 100
     ),

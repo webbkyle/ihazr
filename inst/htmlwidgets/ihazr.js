@@ -4,6 +4,7 @@ HTMLWidgets.widget({
 
   type: 'output',
 
+// initializes the layout of the svg on the webpage
   initialize: function(el, width, height) {
 
     return d3.select(el)
@@ -17,12 +18,12 @@ HTMLWidgets.widget({
 // renderValue function takes in
 // -el: css elements to be modified by javascript package d3
 // -x: values passed in from R to the widget itself
-// -instance:
+// ??? -instance:
   renderValue: function(el, x, instance) {
     var data = HTMLWidgets.dataframeToD3(x);
     var pad = 30;
     var w = 900;
-    var h = 400
+    var h = 400;
     var n_col = data.columns;
 
 // sets the relative area for the number of variables besides time and status
@@ -48,17 +49,21 @@ HTMLWidgets.widget({
                      .attr("width", w)
                      .attr("height", h);
 
-// random data setup found later
+// ???
     var datasub = [];
+// initial start for mouse location [x, y]
     var mouse = [900,200];
     var mouseold = [900,200];
-    // cc will start as first data element but will change once clicked
+// cc will start as first data variable but will change once clicked
+// ??? change this to first marker in dataset
     var cc = "age";
+// freeze indicates if the svg (scatterplot) has been clicked
     var freeze = 0;
+// refresh indicates if a button has been clicked (1) or not
     var refresh = 0;
 
 // kernelhazardEstimator takes in the type of kernel (e.g. epanechnikovKernel),
-// and maps the density of that kernel for each data point in order to smooth
+// and maps the density of that kernel for each data point (x_i) in order to smooth
 // the estimate for the hazard function
     function kernelhazardEstimator(kernel, x) {
       return function(sample) {
@@ -80,44 +85,56 @@ HTMLWidgets.widget({
 // other nonparametric kernel smoothing funcitons: gaussian, uniform, triangle,
 // triweight, cosine
 
+
 // range for the time variable of the data imported
         var trange = [d3.min(data, function(d){return +d.time}),
           d3.max(data, function(d){ return +d.time;})];
-
 // covrange for the first varibale in the marker list (right now this is "age")
         var covrange = [d3.min(data, function(d){return +d[cc];}),
           d3.max(data, function(d){return +d[cc];})];
-
+// x scale for x axis for scatterplot and hazard graph
         var xScale = d3.scale.linear()
             .domain(trange)
             .range([pad*1.5, w-pad*1.5]);
+// y scale for y axis in scatterplot
         var yScale = d3.scale.linear()
             .domain(covrange)
             .range([h-pad*1.5, pad*1.5]);
+// y scale for right y axis in hazard graph
         var yScalehaz = d3.scale.linear()
             .domain([0, 0.75])
             .range([h-pad*1.5, pad*1.5]);
+// y scale for left y axis in hazard graph
         var yScaleNA = d3.scale.linear()
             .domain([0, 3])
             .range([h-pad*1.5, pad*1.5]);
+// x scale (under the current variable selected) for cursor-data selection rect
+// left side
         var mxtocov = d3.scale.linear()
             .domain([pad*1.5, w-pad*1.5])
             .range([0, covrange[1]-covrange[0]]);
+// x scale (under the current variable selected) for cursor-data selection rect
+// right side
         var covtoh = d3.scale.linear()
             .domain([0, covrange[1]-covrange[0]])
             .range([0, h-pad*3]);
+// x axis for both scatterplot and hazard pdf and cdf
         var xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(10);
+// y axis for scatterplot
         var yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
+// y axis for hazard pdf (right side)
         var yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
+// y axis for hazard cdf (left side)
         var yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
+// ???
         var meval = yScale.invert(mouse[1]);
         var bm = mxtocov(mouse[0])/2;
-
+// gets the relative location of the mouse once it moves onto the svg (scatter)
         svg.on("mousemove", function(){
             if(freeze==1){return 0;}
             mouse = d3.mouse(this);
         });
-
+// creates the red rectangles for the variable buttons
         svgbut.selectAll(".rect.buttons")
                 .data(d3.keys(data[1]).slice(2, d3.keys(data[1]).length))
                 .enter()
@@ -133,6 +150,7 @@ HTMLWidgets.widget({
                 .attr("width", w/(d3.keys(data[1]).length-2) - 10)
                 .style("fill-opacity", 1)
                 .style("fill", "rgb(200,50,50)");
+// puts the labels of the variables in the buttons
         svgbut.selectAll(".text.buttons")
                 .data(d3.keys(data[1]).slice(2, d3.keys(data[1]).length))
                 .enter()
@@ -143,11 +161,11 @@ HTMLWidgets.widget({
                 .attr("y", h/10+2)
                 .attr("text-anchor", "middle")
                 .style("fill", "rgb(250,250,250)")
-//                    .style("fill", "rgb(128,0,0)")
                 .style("font-weight", "bold")
                 .style("font-family", "Courier")
                 .style("font-size", "20px")
                 .text(function(d){return d;});
+// makes circles visible in the scatterplot graph
         svg.selectAll("circle")
                 .data(data)
                 .enter()
@@ -162,16 +180,19 @@ HTMLWidgets.widget({
                     return d.status==1 ? "0px" : "2px";
                 })
                 .style("stroke", "rgb(70,70,70)");
+// adds the x axis to the scatterplot
         svg.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0,"+(h-pad)+")")
                 .style("stroke-width", "2px")
                 .call(xAxis);
+// adds the y axis to the scatterplot
         svg.append("g")
                 .attr("class", "y axis")
                 .attr("transform", "translate("+(pad)+",0)")
                 .style("stroke-width", "2px")
                 .call(yAxis);
+// shows the gray rectangle used for selecting data
         svg.append("rect")
                 .attr("class", "grayrect")
                 .attr("x", pad)
@@ -180,21 +201,27 @@ HTMLWidgets.widget({
                 .attr("width", w)
                 .attr("fill", "gray")
                 .attr("fill-opacity", 0.4);
-
+// plots the x and y coordinates of the hazard pdf
         var hazr = d3.svg.line()
             .x(function(d){return xScale(d[0]);})
             .y(function(d){return yScalehaz(d[1]);});
+// plots the cdf of the hazard function where each step represents a "death"
+// recorded in the subseted data
         var nahaz = d3.svg.area()
             .x(function(d){return xScale(d[0]);})
             .y0(h-pad*1.5)
             .y1(function(d){return yScaleNA(d[2]);})
             .interpolate("step-after");
+// pushes the subset of data highlighted by the gray rectangle selection
         data.forEach(function(d){
             if(+d[cc]>(meval-bm) & d[cc]<(meval+bm)){
                 datasub.push([+d.time, 0, 0, +d.status]);
             }
         });
+// ??? does this print anywhere
         console.log(meval, bm);
+
+// ??? when commented this doesn't seem to do anything
         datasub.forEach(function(d, i){
             datasub[i][1] = 1/(datasub.length-i);
             if(i>0){
@@ -203,12 +230,14 @@ HTMLWidgets.widget({
                 datasub[i][2] = datasub[i][1]*datasub[i][3];
             }
         });
-
+// ??? when commented this doesn't seem to do anything
         datasub.push([trange[1], 0, datasub[datasub.length-1][3], 0]);
+// ??? when commented this doesn't seem to do anything
         datasub.unshift([trange[0], 0, 0, 0]);
-//        console.log(datasub);
-
+// using an epanechnikov kernel with a scale of 1, holds the calculations of the
+// kernel over 100 points for the time variable scaled along the x axis
         var khe = kernelhazardEstimator(epanechnikovKernel(1), xScale.ticks(100));
+// ???
         var khedata = khe(datasub);
 
         // BEGIN VERY MESSY LEGEND CODE
@@ -352,34 +381,48 @@ HTMLWidgets.widget({
             mouseold = mouse;
             refresh = 0;
         }
+
         setInterval(mgr, 10);
 
         svgbut.on("click", function(){
+// gray rectangle is set to unclicked
             freeze = 0;
+// indicates that a new variable button has been clicked
             refresh = 1;
+// mt is the x coordinates of the mouse's current location
             var mt = d3.mouse(this)[0];
-            cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[Math.floor(mt/(w/(d3.keys(data[1]).length-2)))];
-            covrange = [d3.min(data, function(d){return +d[cc];}), d3.max(data, function(d){return +d[cc];})];
-
+// looks at the "key" names of the data and slices off all the data with the key
+// selected
+            cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[
+              Math.floor(mt/(w/(d3.keys(data[1]).length-2)))];
+// indicates the range of the selected variable
+            covrange = [d3.min(data, function(d){return +d[cc];}),
+              d3.max(data, function(d){return +d[cc];})];
+// y scale changed based on new covrange after new variable clicked
             yScale
                 .domain(covrange)
                 .range([h-pad*1.5, pad*1.5]);
+// changes the size of gray rect for cursor-data selection on the left
             mxtocov
                 .domain([pad*1.5, w-pad*1.5])
                 .range([0, covrange[1]-covrange[0]]);
+// changes the size of gray rect for cursor-data selection on the right side
             covtoh
                 .domain([0, covrange[1]-covrange[0]])
                 .range([0, h-pad*3]);
+// new y axis calculated based on new y scale defined above
             yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
-
+// circles are plotted based on new y scale values
             svg.selectAll("circle")
                     .transition().duration(1000)
                     .attr("cy", function(d){return yScale(+d[cc]);});
-
+// y axis is plotted in scatterplot based on new variable selection
             svg.select(".y.axis")
                     .transition().duration(1000)
                     .call(yAxis);
         });
+// on the click of the scatterplot and setting of the gray rectangle bounds,
+// the freeze value will be set to 1 if it was 0, and be set to 0 if it was 1
         svg.on("click", function(){
             if(freeze===0){
                 freeze=1;
@@ -387,13 +430,12 @@ HTMLWidgets.widget({
             }
             freeze=0;
         });
-//    })
 
 
   },
 
-  resize: function(el, width, height, instance) {
+/*  resize: function(el, width, height, instance) {
 
-  }
+  }*/
 
 });
