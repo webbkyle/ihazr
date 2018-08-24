@@ -24,7 +24,8 @@ HTMLWidgets.widget({
     var pad = 30;
     var w = 900;
     var h = 400;
-    var n_col = data.columns;
+    var nCol = d3.keys(data[1]).length;
+    var nVar = d3.keys(data[1]).length - 2;
 
 // sets the relative area for the number of variables besides time and status
     var svgbut = d3.select(el)
@@ -55,11 +56,11 @@ HTMLWidgets.widget({
     var mouse = [900,200];
     var mouseold = [900,200];
 // cc will start as first data variable but will change once clicked
-// ??? change this to first marker in dataset
-    var cc = "age";
-// freeze indicates if the svg (scatterplot) has been clicked
+    var cc = d3.keys(data[1])[2];
+    //var cc = 0;
+// refresh indicates if the scatterplot has been clicked (1) or not (0)
     var freeze = 0;
-// refresh indicates if a button has been clicked (1) or not
+// freeze indicates if a button has been clicked (1) or not (0)
     var refresh = 0;
 
 // kernelhazardEstimator takes in the type of kernel (e.g. epanechnikovKernel),
@@ -78,15 +79,27 @@ HTMLWidgets.widget({
 // epanechnikov Kernel used for nonparametric density estimation
     function epanechnikovKernel(scale) {
       return function(u) {
+// if the absolute value of u/scale is less than or
+//  equal to one, then output the functional statement .75 * (1 - u * u) / scale.
+//  Else output zero
         return Math.abs(u /= scale) <= 1 ? 0.75 * (1 - u * u) / scale : 0;
       };
     }
+
+// gaussian kernel where s is the standard deviation (set to 1)
+    function gaussianKernel(u, s = 1) {
+      return function(x) {
+        return Math.abs(x /= s) <= 1 ? 1/(Math.sqrt(2*Math.PI)*s) * exp(-((x-u)/s)^2) : 0;
+        };
+    }
+
 
 // other nonparametric kernel smoothing funcitons: gaussian, uniform, triangle,
 // triweight, cosine
 
 
 // range for the time variable of the data imported
+// +d coerces variables to numericals
         var trange = [d3.min(data, function(d){return +d.time}),
           d3.max(data, function(d){ return +d.time;})];
 // covrange for the first varibale in the marker list (right now this is "age")
@@ -100,9 +113,10 @@ HTMLWidgets.widget({
         var yScale = d3.scale.linear()
             .domain(covrange)
             .range([h-pad*1.5, pad*1.5]);
-// y scale for right y axis in hazard graph
+// !!! y scale for right y axis in hazard graph
         var yScalehaz = d3.scale.linear()
             .domain([0, 0.75])
+            //.domain(hazrange)
             .range([h-pad*1.5, pad*1.5]);
 // y scale for left y axis in hazard graph
         var yScaleNA = d3.scale.linear()
@@ -134,29 +148,33 @@ HTMLWidgets.widget({
             if(freeze==1){return 0;}
             mouse = d3.mouse(this);
         });
+
+// if the number of variables is greater than 1, will create the buttons
+        if(nVar > 1){
 // creates the red rectangles for the variable buttons
         svgbut.selectAll(".rect.buttons")
-                .data(d3.keys(data[1]).slice(2, d3.keys(data[1]).length))
+                .data(d3.keys(data[1]).slice(2, nCol))
                 .enter()
             .append("rect")
                 .attr("class", ".buttons")
                 .attr("x", function(d,i){
-                    return i*w/(d3.keys(data[1]).length-2)+5;
+                    //return i*w/(d3.keys(data[1]).length-2)+5;
+                    return i*w/(nVar)+nVar;
                 })
                 .attr("y", 5)
                 .attr("rx", 3)
                 .attr("ry", 3)
                 .attr("height", h/5-10)
-                .attr("width", w/(d3.keys(data[1]).length-2) - 10)
+                .attr("width", w/(nVar) - 10)
                 .style("fill-opacity", 1)
                 .style("fill", "rgb(200,50,50)");
 // puts the labels of the variables in the buttons
         svgbut.selectAll(".text.buttons")
-                .data(d3.keys(data[1]).slice(2, d3.keys(data[1]).length))
+                .data(d3.keys(data[1]).slice(2, nCol))
                 .enter()
             .append("text")
                 .attr("x", function(d,i){
-                    return (i+0.5)*w/(d3.keys(data[1]).length-2);
+                    return (i+0.5)*w/(nVar);
                 })
                 .attr("y", h/10+2)
                 .attr("text-anchor", "middle")
@@ -165,6 +183,7 @@ HTMLWidgets.widget({
                 .style("font-family", "Courier")
                 .style("font-size", "20px")
                 .text(function(d){return d;});
+        }
 // makes circles visible in the scatterplot graph
         svg.selectAll("circle")
                 .data(data)
@@ -218,10 +237,9 @@ HTMLWidgets.widget({
                 datasub.push([+d.time, 0, 0, +d.status]);
             }
         });
-// ??? does this print anywhere
-        console.log(meval, bm);
 
-// ??? when commented this doesn't seem to do anything
+// sets the subset of data for when the ihazr function first starts up. Initially
+// pushes the data when the mouse has not moved. Will be redefined in mgr()
         datasub.forEach(function(d, i){
             datasub[i][1] = 1/(datasub.length-i);
             if(i>0){
@@ -230,17 +248,16 @@ HTMLWidgets.widget({
                 datasub[i][2] = datasub[i][1]*datasub[i][3];
             }
         });
-// ??? when commented this doesn't seem to do anything
         datasub.push([trange[1], 0, datasub[datasub.length-1][3], 0]);
-// ??? when commented this doesn't seem to do anything
         datasub.unshift([trange[0], 0, 0, 0]);
 // using an epanechnikov kernel with a scale of 1, holds the calculations of the
-// kernel over 100 points for the time variable scaled along the x axis
+// kernel for over 100 points for the time variable scaled along the x axis
         var khe = kernelhazardEstimator(epanechnikovKernel(1), xScale.ticks(100));
-// ???
+// use previously defined kernel on data selected
         var khedata = khe(datasub);
 
         // BEGIN VERY MESSY LEGEND CODE
+// sets location and color of time and marker window legend
         svghud.append("rect")
                 .attr("x", pad)
                 .attr("y", pad/4)
@@ -248,6 +265,7 @@ HTMLWidgets.widget({
                 .attr("height", h/10)
                 .style("fill", "gray")
                 .style("fill-opacity", "0.4");
+// text elements for time window legend
         svghud.append("text")
                 .attr("x", pad*1.3)
                 .attr("y", 30)
@@ -255,6 +273,7 @@ HTMLWidgets.widget({
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text("time window: 2 years");
+// text elements for marker window legend
         svghud.append("text")
                 .attr("class", "hudtxt")
                 .attr("x", w/3.9)
@@ -263,6 +282,7 @@ HTMLWidgets.widget({
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));
+// styles for points in scatterplot
         svghud.selectAll("legenddots")
                 .data([15,35])
                 .enter()
@@ -271,6 +291,8 @@ HTMLWidgets.widget({
                 .attr("cy", function(d){return d;})
                 .attr("r", 4)
                 .attr("fill", function(d, i){
+// if set to zero, legend will return solid blue dot indicating event, else censored
+// point indicated by i === 1 and transparent and black stroke-width
                     return i===0 ? "rgb(0,0,180)" : "transparent";
                 })
                 .style("stroke-width", function(d, i){
@@ -281,6 +303,7 @@ HTMLWidgets.widget({
                 .style("stroke", "rgb(255,90,0)")
                 .style("stroke-width", "4px")
                 .attr("d", "M"+w/1.5+","+15+"L"+w/1.45+","+15);
+//
         svghud.append("path")
                 .style("stroke", "rgb(50,50,50)")
                 .style("stroke-width", "8px")
@@ -301,6 +324,7 @@ HTMLWidgets.widget({
         svghud.selectAll("legendtxt2")
                 .data([19,40])
                 .enter()
+// displays legend text for hazard rate and cumulative hazard
             .append("text")
                 .attr("x", w/1.45+5)
                 .attr("y", function(d){return d;})
@@ -340,16 +364,11 @@ HTMLWidgets.widget({
                 .style("stroke-width", "2px")
                 .call(yAxisNA);
 
-        function mgr(){
-            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze===1) && refresh===0){
-                //IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN exit function w/o calculating anything
-                return 0;
-            }
-            meval = yScale.invert(mouse[1]);
-            bm = mxtocov(mouse[0])/2;
-            datasub = [];
+// function to return data from subselection of variables from bbox coordinates
+        var retDatasub = function(boxX, boxY){
+          datasub = [];
             data.forEach(function(d){
-                if(+d[cc]>(meval-bm) & +d[cc]<meval+bm){
+                if(+d[cc]>(boxY-boxX) & +d[cc]<boxY+boxY){
                     datasub.push([+d.time, 0, 0, +d.status]);
                 }
             });
@@ -363,13 +382,42 @@ HTMLWidgets.widget({
             });
             datasub.push([trange[1], 0, datasub[datasub.length-1][3], 0]);
             datasub.unshift([trange[0], 0, 0, 0]);
+            return datasub;
+        };
 
+// function to find the max of the computed kernel hazard data
+        var maxdat = function(L, type){
+          var L2 = [];
+          if(type === 'haz'){
+            for(i=0; i<L.length; i++){
+              L2.push(L[i][1]);
+            }
+          }
+          else{
+            for(i=0; i<L.length; i++){
+              L2.push(L[i][2]);
+            }
+          }
+          //console.log(d3.max(L2));
+          return d3.max(L2);
+        };
+
+
+// function to update subset of data based on hud chosen
+        function mgr(){
+// if statement helps to mitigate cpu workload by returning zero IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN mgr will exit w/o calculating anything
+            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze===1) && refresh===0){
+                return 0;
+            }
+            meval = yScale.invert(mouse[1]);
+            bm = mxtocov(mouse[0])/2;
+            datasub = retDatasub(bm, meval);
             khedata = khe(datasub);
-
             svghaz.select("path.hazline")
                     .datum(khedata)
                     .transition().duration(100)
-                    .attr("d", hazr);
+                    .attr("d", hazr)
+                    .call(yAxishaz);
             svghaz.select("path.nahazline")
                     .datum(datasub)
                     .attr("d", nahaz);
@@ -382,15 +430,19 @@ HTMLWidgets.widget({
             refresh = 0;
         }
 
+// calls mgr every 10 miliseconds
         setInterval(mgr, 10);
 
         svgbut.on("click", function(){
+
+
 // gray rectangle is set to unclicked
             freeze = 0;
 // indicates that a new variable button has been clicked
             refresh = 1;
 // mt is the x coordinates of the mouse's current location
             var mt = d3.mouse(this)[0];
+
 // looks at the "key" names of the data and slices off all the data with the key
 // selected
             cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[
@@ -402,6 +454,8 @@ HTMLWidgets.widget({
             yScale
                 .domain(covrange)
                 .range([h-pad*1.5, pad*1.5]);
+/*// !!! hazrange for the first varibale in the marker list (right now this is "age")
+            hazrange = [0, d3.max(data, function(d){return khe(+d[cc]);})];*/
 // changes the size of gray rect for cursor-data selection on the left
             mxtocov
                 .domain([pad*1.5, w-pad*1.5])
@@ -421,11 +475,49 @@ HTMLWidgets.widget({
                     .transition().duration(1000)
                     .call(yAxis);
         });
+
+// function that makes the axes in the hazard pdf plot scalable. Will be called
+// once the scatterplot above it is clicked and the subset of data is set
+        var scalable = function(){
+          meval = yScale.invert(mouse[1]);
+          bm = mxtocov(mouse[0])/2;
+          datasub = retDatasub(bm, meval);
+          khedata = khe(datasub);
+          maxNA = maxdat(datasub, 'hazNA');
+          maxkhe = maxdat(khedata, 'haz');
+          yhazRange = [0, maxkhe + maxkhe/4];
+          yRange = [0, maxNA + maxNA/7];
+          yScalehaz
+              .domain(yhazRange);
+          yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
+          svghaz.select(".y.axis.haz")
+              .transition().duration(500)
+              .call(yAxishaz);
+          svghaz.selectAll("path.hazline")
+              .datum(khedata)
+              .transition().duration(100)
+              .attr("d", hazr)
+              .call(yAxishaz);
+          yScaleNA
+              .domain(yRange);
+          yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
+          svghaz.select("path.nahazline")
+              .datum(datasub)
+              .transition().duration(100)
+              .attr("d", nahaz)
+              .call(yAxisNA);
+          svghaz.select(".y.axis.NA")
+              .transition().duration(500)
+              .call(yAxisNA);
+        };
+
+
 // on the click of the scatterplot and setting of the gray rectangle bounds,
 // the freeze value will be set to 1 if it was 0, and be set to 0 if it was 1
         svg.on("click", function(){
             if(freeze===0){
                 freeze=1;
+                scalable();
                 return 0;
             }
             freeze=0;

@@ -25,9 +25,9 @@ ihazr of data values \code{time}, \code{status}, and \code{marker}
 }
 \description{
 \code{ihazr} interactively updates a hazard function for survival anaylisis.
-This function creates an HTML widget for the survival data that the user
-inputs. The widget allows the user to choose subsections of their data and
-plot the nonparametric kernel estimated hazard function and cumulative hazard function.
+This function creates an HTML widget for survival data. The widget allows the
+user to choose subsections of their data and plot the nonparametric kernel
+estimated hazard function and cumulative hazard function.
 }
 \examples{
 Example 1 - simulated data
@@ -36,7 +36,7 @@ status_t <- rbinom(50, 1, .7)
 age_t <- runif(50, 20, 80)
 ihazr(time_t, status_t, age_t)
 
-Example 2 - with data
+Example 2 - with survival data
 library(survival)
 library(dplyr)
 pbc5 <- pbc \%>\%

@@ -1,9 +1,9 @@
 #' ihazr
 #'
 #' \code{ihazr} interactively updates a hazard function for survival anaylisis.
-#' This function creates an HTML widget for the survival data that the user
-#' inputs. The widget allows the user to choose subsections of their data and
-#' plot the nonparametric kernel estimated hazard function and cumulative hazard function.
+#' This function creates an HTML widget for survival data. The widget allows the
+#' user to choose subsections of their data and plot the nonparametric kernel
+#' estimated hazard function and cumulative hazard function.
 #'
 #' @import htmlwidgets
 #' @param time A numerical vector of time data.
@@ -22,7 +22,7 @@
 #' age_t <- runif(50, 20, 80)
 #' ihazr(time_t, status_t, age_t)
 #'
-#' Example 2 - with data
+#' Example 2 - with survival data
 #' library(survival)
 #' library(dplyr)
 #' pbc5 <- pbc %>%
@@ -65,11 +65,7 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL) {
     height = height,
     # attempt to fix viewer window in RStudio
     sizingPolicy = htmlwidgets::sizingPolicy(
-      viewer.padding = 0,
-      viewer.paneHeight = 200,
-      viewer.suppress = TRUE,
-      viewer.defaultHeight = 200,
-      viewer.defaultWidth = 100
+      viewer.suppress = TRUE
     ),
     package = 'ihazr'
   )
