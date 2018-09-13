@@ -49,7 +49,7 @@
 #'   }
 #' )
 #' @export
-ihazr <- function(time, status, marker, width = NULL, height = NULL) {
+ihazr <- function(time, status, marker, width = NULL, height = NULL, buttons = TRUE) {
   # forward options using x
     x <- data.frame(
       time = time,
@@ -57,6 +57,16 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL) {
     )
     x <- cbind(x, marker)
     x <- x[order(x$time), ]
+
+    settings <- list(
+      buttons = buttons
+    )
+
+    x <- list(
+      data = x,
+      settings = settings
+    )
+
   # create widget
   htmlwidgets::createWidget(
     name = 'ihazr',

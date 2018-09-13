@@ -7,11 +7,11 @@ HTMLWidgets.widget({
 // initializes the layout of the svg on the webpage
   initialize: function(el, width, height) {
 
-    return d3.select(el)
-            .append("svg")
-              .attr("class", "scatter")
+    return d3.select(el);
+            /*.append("div")
+              .attr("class", "entire")
               .attr("width", width)
-              .attr("height", height);
+              .attr("height", height)*/
 
   },
 
@@ -20,23 +20,34 @@ HTMLWidgets.widget({
 // -x: values passed in from R to the widget itself
 // ??? -instance:
   renderValue: function(el, x, instance) {
-    var data = HTMLWidgets.dataframeToD3(x);
+    var data = HTMLWidgets.dataframeToD3(x.data);
+    var buttons = x.settings.buttons;
     var pad = 30;
     var w = 900;
+    var wFull = w * 2;
     var h = 400;
     var nCol = d3.keys(data[1]).length;
     var nVar = d3.keys(data[1]).length - 2;
+    var xPos = w + pad;
+    var buttonWidth = w/(nVar) - 10;
+    var buttonTextSize = Math.min(Math.floor(buttonWidth / 6), 30);
 
 // sets the relative area for the number of variables besides time and status
-    var svgbut = d3.select(el)
-        .select("svg")
+    var svgbut = d3.select(el).append("svg")
             .attr("class", "button")
             .attr("width", w)
             .attr("height", h/5);
 
+    var dropdown = d3.select(el).append("svg")
+            .attr("class", "dropdown")
+            .attr("width", w/5)
+            .attr("height", h/5);
+
+
 // sets the relative area for the entire scatterplot svg element
     var svg = d3.select(el).append("svg")
-                     .attr("width", w)
+                     .attr("class", "scatter")
+                     .attr("width", wFull)
                      .attr("height", h);
 
 // sets the relative area for the hud element of the scatterplot svg element
@@ -47,20 +58,21 @@ HTMLWidgets.widget({
 
 // sets the relative area for the hazard function element
     var svghaz = d3.select(el).append("svg")
-                     .attr("width", w)
+                     .attr("class", "haz")
+                     .attr("width", wFull)
                      .attr("height", h);
 
-// ???
+// sets empty dataframe to be populated when clicked on dataregion in scatter
     var datasub = [];
 // initial start for mouse location [x, y]
-    var mouse = [900,200];
-    var mouseold = [900,200];
+    var mouse = [w,h/2];
+    var mouseold = [w,h/2];
 // cc will start as first data variable but will change once clicked
     var cc = d3.keys(data[1])[2];
     //var cc = 0;
-// refresh indicates if the scatterplot has been clicked (1) or not (0)
+// freeze indicates if the scatterplot has been clicked (1, 2, 3) or not (0)
     var freeze = 0;
-// freeze indicates if a button has been clicked (1) or not (0)
+// refresh indicates if a button has been clicked (1) or not (0)
     var refresh = 0;
 
 // kernelhazardEstimator takes in the type of kernel (e.g. epanechnikovKernel),
@@ -102,7 +114,7 @@ HTMLWidgets.widget({
 // +d coerces variables to numericals
         var trange = [d3.min(data, function(d){return +d.time}),
           d3.max(data, function(d){ return +d.time;})];
-// covrange for the first varibale in the marker list (right now this is "age")
+// covrange for the first varibale in the marker list
         var covrange = [d3.min(data, function(d){return +d[cc];}),
           d3.max(data, function(d){return +d[cc];})];
 // x scale for x axis for scatterplot and hazard graph
@@ -116,7 +128,6 @@ HTMLWidgets.widget({
 // !!! y scale for right y axis in hazard graph
         var yScalehaz = d3.scale.linear()
             .domain([0, 0.75])
-            //.domain(hazrange)
             .range([h-pad*1.5, pad*1.5]);
 // y scale for left y axis in hazard graph
         var yScaleNA = d3.scale.linear()
@@ -140,65 +151,88 @@ HTMLWidgets.widget({
         var yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
 // y axis for hazard cdf (left side)
         var yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
-// ???
+// meval is the yScaled position of the mouse for the scatterplot
+// bm is the x position of the mouse divided by 2 (to place the cursor in the
+// middle of the gray box)
         var meval = yScale.invert(mouse[1]);
         var bm = mxtocov(mouse[0])/2;
 // gets the relative location of the mouse once it moves onto the svg (scatter)
+// and freeze is set to 0
         svg.on("mousemove", function(){
-            if(freeze==1){return 0;}
+            if(freeze!==0){return 0;}
             mouse = d3.mouse(this);
         });
 
 // if the number of variables is greater than 1, will create the buttons
-        if(nVar > 1){
+        if(nVar > 1 && buttons === true){
 // creates the red rectangles for the variable buttons
-        svgbut.selectAll(".rect.buttons")
-                .data(d3.keys(data[1]).slice(2, nCol))
-                .enter()
-            .append("rect")
+          svgbut.selectAll(".rect.buttons")
+                  .data(d3.keys(data[1]).slice(2, nCol))
+                  .enter()
+              .append("rect")
+                  .attr("class", ".buttons")
+                  .attr("x", function(d,i){
+                      //return i*w/(d3.keys(data[1]).length-2)+5;
+                      return i*w/(nVar)+nVar;
+                  })
+                  .attr("y", 5)
+                  .attr("rx", 3)
+                  .attr("ry", 3)
+                  .attr("height", h/5-10)
+                  .attr("width", buttonWidth)
+                  .style("fill-opacity", 1)
+                  .style("fill", "rgb(200,50,50)");
+    // puts the labels of the variables in the buttons
+          svgbut.selectAll(".text.buttons")
+                  .data(d3.keys(data[1]).slice(2, nCol))
+                  .enter()
+              .append("text")
+                  .attr("x", function(d,i){
+                      return (i+0.5)*w/(nVar);
+                  })
+                  .attr("y", h/10+2)
+                  .attr("text-anchor", "middle")
+                  .style("fill", "rgb(250,250,250)")
+                  .style("font-weight", "bold")
+                  .style("font-family", "Courier")
+                  .style("font-size", buttonTextSize + "px")
+                  .text(function(d){return d;});
+        } else if(nVar > 1 && buttons === false){
+// creates a drop down feature for selecting variables that can be typed into
+          /*svgbut.append("text")
                 .attr("class", ".buttons")
-                .attr("x", function(d,i){
-                    //return i*w/(d3.keys(data[1]).length-2)+5;
-                    return i*w/(nVar)+nVar;
-                })
-                .attr("y", 5)
-                .attr("rx", 3)
-                .attr("ry", 3)
-                .attr("height", h/5-10)
-                .attr("width", w/(nVar) - 10)
-                .style("fill-opacity", 1)
-                .style("fill", "rgb(200,50,50)");
-// puts the labels of the variables in the buttons
-        svgbut.selectAll(".text.buttons")
-                .data(d3.keys(data[1]).slice(2, nCol))
-                .enter()
-            .append("text")
-                .attr("x", function(d,i){
-                    return (i+0.5)*w/(nVar);
-                })
-                .attr("y", h/10+2)
-                .attr("text-anchor", "middle")
-                .style("fill", "rgb(250,250,250)")
-                .style("font-weight", "bold")
-                .style("font-family", "Courier")
-                .style("font-size", "20px")
-                .text(function(d){return d;});
+                .attr("contentEditable", true)
+                .text(function(d) {return d.text;} )
+                .on("keyup", function(d) { d.text = d3.select(this).text();});*/
+
+          var options  = dropdown.append("select")
+                              .selectAll("option")
+                                .data(d3.keys(data[1]).slice(2, nCol))
+                                .enter()
+                                .append("option");
+
+          options.text(function(d) {
+              return d;
+               })
+                  .attr("value", function(d) {
+                  return d;
+                  });
         }
 // makes circles visible in the scatterplot graph
         svg.selectAll("circle")
                 .data(data)
                 .enter()
-            .append("circle")
-                .attr("cx", function(d){return xScale(+d.time);})
-                .attr("cy", function(d){return yScale(+d[cc]);})
-                .attr("r", 4)
-                .attr("fill", function(d){
-                    return d.status==1 ? "rgb(0,0,180)" : "transparent";
-                })
-                .style("stroke-width", function(d){
-                    return d.status==1 ? "0px" : "2px";
-                })
-                .style("stroke", "rgb(70,70,70)");
+                .append("circle")
+                    .attr("cx", function(d){return xScale(+d.time);})
+                    .attr("cy", function(d){return yScale(+d[cc]);})
+                    .attr("r", 4)
+                    .attr("fill", function(d){
+                        return d.status==1 ? "rgb(0,0,180)" : "transparent";
+                    })
+                    .style("stroke-width", function(d){
+                        return d.status==1 ? "0px" : "2px";
+                    })
+                    .style("stroke", "rgb(70,70,70)");
 // adds the x axis to the scatterplot
         svg.append("g")
                 .attr("class", "x axis")
@@ -220,6 +254,30 @@ HTMLWidgets.widget({
                 .attr("width", w)
                 .attr("fill", "gray")
                 .attr("fill-opacity", 0.4);
+// svg elements for time bounds which will pop up in after second and
+// third clicks
+        svg.append("text")
+                .attr("class", "time1");
+        svg.append("text")
+                .attr("class", "time2");
+// minY value selected
+        svg.append("text")
+                .attr("class", "minYtxt")
+                .attr("x", w + pad*2.5)
+                .attr("y", pad + 10)
+                .style("fill", "rgb(50,50,50")
+                .style("font-family", "Arial")
+                .style("font-size", "18px")
+                .text("Minimum " + cc + " selected:");
+// maxY value selected
+        svg.append("text")
+                .attr("class", "maxYtxt")
+                .attr("x", w + pad*2.5)
+                .attr("y", pad + 40)
+                .style("fill", "rgb(50,50,50")
+                .style("font-family", "Arial")
+                .style("font-size", "18px")
+                .text("Maximum " + cc + " selected:");
 // plots the x and y coordinates of the hazard pdf
         var hazr = d3.svg.line()
             .x(function(d){return xScale(d[0]);})
@@ -233,7 +291,7 @@ HTMLWidgets.widget({
             .interpolate("step-after");
 // pushes the subset of data highlighted by the gray rectangle selection
         data.forEach(function(d){
-            if(+d[cc]>(meval-bm) & d[cc]<(meval+bm)){
+            if(+d[cc]>(meval-bm) & +d[cc]<(meval+bm)){
                 datasub.push([+d.time, 0, 0, +d.status]);
             }
         });
@@ -344,7 +402,6 @@ HTMLWidgets.widget({
                 .datum(khedata)
                 .attr("class", "hazline")
                 .style("stroke", "rgba(255,90,0,1)")
-//                    .style("stroke", "rgba(218,165,32,1)")
                 .style("stroke-width", "4px")
                 .style("fill-opacity","0")
                 .attr("d", hazr);
@@ -390,12 +447,12 @@ HTMLWidgets.widget({
           var L2 = [];
           if(type === 'haz'){
             for(i=0; i<L.length; i++){
-              L2.push(L[i][1]);
+              L2.push(+L[i][1]);
             }
           }
           else{
             for(i=0; i<L.length; i++){
-              L2.push(L[i][2]);
+              L2.push(+L[i][2]);
             }
           }
           //console.log(d3.max(L2));
@@ -403,14 +460,16 @@ HTMLWidgets.widget({
         };
 
 
-// function to update subset of data based on hud chosen
+// function to update subset of data based on variable chosen
         function mgr(){
 // if statement helps to mitigate cpu workload by returning zero IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN mgr will exit w/o calculating anything
-            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze===1) && refresh===0){
+            if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze!==0) && refresh===0){
                 return 0;
             }
             meval = yScale.invert(mouse[1]);
             bm = mxtocov(mouse[0])/2;
+            rectMax = yScale.invert(mouse[1]-covtoh(bm));
+            rectMin = yScale.invert(mouse[1]+covtoh(bm));
             datasub = retDatasub(bm, meval);
             khedata = khe(datasub);
             svghaz.select("path.hazline")
@@ -424,6 +483,12 @@ HTMLWidgets.widget({
             svg.select(".grayrect")
                     .attr("y", mouse[1]-covtoh(bm))
                     .attr("height", covtoh(mxtocov(mouse[0])));
+            svg.select("text.minYtxt")
+                    .text("Minimum " + cc + " selected:  " +
+                    rectMin.toFixed(2));
+            svg.select("text.maxYtxt")
+                    .text("Maximum " + cc + " selected:  " +
+                    rectMax.toFixed(2));
             svghud.select("text.hudtxt")
                     .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));
             mouseold = mouse;
@@ -445,8 +510,8 @@ HTMLWidgets.widget({
 
 // looks at the "key" names of the data and slices off all the data with the key
 // selected
-            cc = d3.keys(data[1]).slice(2, d3.keys(data[1]).length)[
-              Math.floor(mt/(w/(d3.keys(data[1]).length-2)))];
+            cc = d3.keys(data[1]).slice(2, nCol)[
+              Math.floor(mt/(w/(nVar)))];
 // indicates the range of the selected variable
             covrange = [d3.min(data, function(d){return +d[cc];}),
               d3.max(data, function(d){return +d[cc];})];
@@ -454,8 +519,8 @@ HTMLWidgets.widget({
             yScale
                 .domain(covrange)
                 .range([h-pad*1.5, pad*1.5]);
-/*// !!! hazrange for the first varibale in the marker list (right now this is "age")
-            hazrange = [0, d3.max(data, function(d){return khe(+d[cc]);})];*/
+// !!! hazrange for the first varibale in the marker list (right now this is "age")
+            hazrange = [0, d3.max(data, function(d){return khe(+d[cc]);})];
 // changes the size of gray rect for cursor-data selection on the left
             mxtocov
                 .domain([pad*1.5, w-pad*1.5])
@@ -511,20 +576,56 @@ HTMLWidgets.widget({
               .call(yAxisNA);
         };
 
+        var timebounds = function(data){
+
+        };
 
 // on the click of the scatterplot and setting of the gray rectangle bounds,
-// the freeze value will be set to 1 if it was 0, and be set to 0 if it was 1
+// the freeze value will be set to 1 to initailly scale the hazard function and
+// set y bounds
+// freeze will be set to two on the second click of the svg element. This will set
+// the minimum time bound
+// freeze will then be set to 3 on the third click of the svg element and the
+// maximum time bound will be selected.
+// Lastly, freeze will be reset to 0 on the fourth click
         svg.on("click", function(){
             if(freeze===0){
                 freeze=1;
                 scalable();
-                return 0;
             }
-            freeze=0;
+            /*else if(freeze===1){
+                freeze += 1;
+                var tMouse = d3.mouse(this)[0];
+                svg.select("text.time1")
+                    .attr("x", w + pad*2.5)
+                    .attr("y", pad + 100)
+                    .style("fill", "rgb(50,50,50")
+                    .style("font-family", "Arial")
+                    .style("font-size", "18px")
+                    .text("Minimum time selected:  " + d3.round(xScale.invert(tMouse), 2));
+            }
+            else if(freeze===2){
+                freeze += 1;
+                var tMouse2 = d3.mouse(this)[0];
+                svg.select("text.time2")
+                    .attr("x", w + pad*2.5)
+                    .attr("y", pad + 130)
+                    .style("fill", "rgb(50,50,50")
+                    .style("font-family", "Arial")
+                    .style("font-size", "18px")
+                    .text("Maximum time selected:  " + d3.round(xScale.invert(tMouse2), 2));
+            }*/
+            else{
+              freeze=0;
+              /*svg.select("text.time1")
+                    .text("Minimum time selected:  ");
+              svg.select("text.time2")
+                    .text("Maximum time selected:  ");*/
+            }
         });
 
 
-  },
+  }//,
 
 /*  resize: function(el, width, height, instance) {
 

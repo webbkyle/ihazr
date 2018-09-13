@@ -94,11 +94,20 @@ p{
   cursor:normal;
 }
 svg{
-    cursor:crosshair;
+    cursor: normal;
 }
 .button{
     cursor: pointer;
 }
 .scatter{
-    cursor: ew-resize;
+    cursor: crosshair;
+}
+.hud{
+    cursor: normal;
+}
+.haz{
+    cursor: normal;
+}
+.dropdown{
+    cursor: normal;
 }

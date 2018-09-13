@@ -4,7 +4,8 @@
 \alias{ihazr}
 \title{ihazr}
 \usage{
-ihazr(time, status, marker, width = NULL, height = NULL)
+ihazr(time, status, marker, width = NULL, height = NULL,
+  buttons = TRUE)
 }
 \arguments{
 \item{time}{A numerical vector of time data.}
