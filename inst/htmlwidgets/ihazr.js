@@ -97,7 +97,7 @@ HTMLWidgets.widget({
     var svg = d3.select(el).append("svg")
                      .attr("class", "main")
                      .attr("width", wFull)
-                     .attr("height", h);
+                     .attr("height", h + 50);
 
 // sets the relative area for the hud element of the scatterplot svg element
     var svghud = d3.select(el).append("svg")
@@ -109,7 +109,7 @@ HTMLWidgets.widget({
     var svghaz = d3.select(el).append("svg")
                      .attr("class", "haz")
                      .attr("width", wFull)
-                     .attr("height", h);
+                     .attr("height", h + 50);
 
     var svgtest = d3.select(el).append("svg")
                      .attr("class", "test")
@@ -180,10 +180,10 @@ HTMLWidgets.widget({
 /*// x and y scale for bin selector
         var xScaleKern = d3.scale.linear()
             .domain([0, 5])
-            .range([pad*1.5, w-pad*1.5]);*/
+            .range([pad*1.5, w-pad*1.5]);
         var yScaleKern = d3.scale.linear()
             .domain([0, 2])
-            .range(h-pad*1.5, pad*1.5);
+            .range(h-pad*1.5, pad*1.5);*/
 
 // x scale (under the current variable selected) for cursor-data selection rect
 // left side
@@ -221,12 +221,13 @@ HTMLWidgets.widget({
         var scat = svg.append("g")
                       .attr("class", "scatter")
                       .attr("width", wFull)
-                      .attr("height", h);
+                      .attr("height", h)
+                      .attr("transform", "translate("+(pad)+",0)");
 
 // creates large white rectangle for cursor=crosshair area
         scat.append("rect")
                 .attr("class", "whiteRect")
-                .attr("x", pad)
+                .attr("x", 2*pad)
                 .attr("y", 0)
                 .attr("height", h)
                 .attr("width", w)
@@ -237,7 +238,7 @@ HTMLWidgets.widget({
                 .data(data)
                 .enter()
                 .append("circle")
-                    .attr("cx", function(d){return xScale(+d.time);})
+                    .attr("cx", function(d){return xScale(+d.time) + pad;})
                     .attr("cy", function(d){return yScale(+d[cc]);})
                     .attr("r", 4)
                     .attr("fill", function(d){
@@ -250,22 +251,38 @@ HTMLWidgets.widget({
 // adds the x axis to the scatterplot
         scat.append("g")
                 .attr("class", "x axis")
-                .attr("transform", "translate(0,"+(h-pad)+")")
+                .attr("transform", "translate("+(pad)+","+(h-pad)+")")
                 .style("stroke-width", "2px")
                 .call(xAxis);
+// x axis label
+        scat.append("text")
+              .attr("class", "x label")
+              .attr("text-anchor", "end")
+              .attr("x", w/2 + pad)
+              .attr("y", h + 20)
+              .text("time");
 // adds the y axis to the scatterplot
         scat.append("g")
                 .attr("class", "y axis")
-                .attr("transform", "translate("+(pad)+",0)")
+                .attr("transform", "translate("+(2*pad)+",0)")
                 .style("stroke-width", "2px")
                 .call(yAxis);
+// y axis label
+        scat.append("g")
+              .append("text")
+              .attr("x", -200)
+              .attr("y", 2)
+              .attr("class", "y label")
+              .attr("transform", "rotate(-90)")
+              .attr("text-anchor", "middle")
+              .text(cc);
 // shows the gray rectangle used for selecting data
         scat.append("rect")
                 .attr("class", "grayrect")
-                .attr("x", pad)
+                .attr("x", 2*pad)
                 .attr("y", mouse[1]-covtoh(bm))
                 .attr("height", covtoh(mxtocov(mouse[0])))
-                .attr("width", w)
+                .attr("width", w - 2*pad)
                 .attr("fill", "gray")
                 .attr("fill-opacity", 0.4);
 
@@ -314,12 +331,12 @@ HTMLWidgets.widget({
             .y(function(d){return yScaleKern(d[1]);});*/
 // plots the x and y coordinates of the hazard pdf
         var hazr = d3.svg.line()
-            .x(function(d){return xScale(d[0]);})
+            .x(function(d){return xScale(d[0]) + 2*pad;})
             .y(function(d){return yScalehaz(d[1]);});
 // plots the cdf of the hazard function where each step represents a "death"
 // recorded in the subseted data
         var nahaz = d3.svg.area()
-            .x(function(d){return xScale(d[0]);})
+            .x(function(d){return xScale(d[0]) + 2*pad;})
             .y0(h-pad*1.5)
             .y1(function(d){return yScaleNA(d[2]);})
             .interpolate("step-after");
@@ -368,7 +385,7 @@ HTMLWidgets.widget({
         // BEGIN VERY MESSY LEGEND CODE
 // sets location and color of time and marker window legend
         svghud.append("rect")
-                .attr("x", pad)
+                .attr("x", 3*pad)
                 .attr("y", pad/4)
                 .attr("width", w/2.35)
                 .attr("height", h/10)
@@ -376,7 +393,7 @@ HTMLWidgets.widget({
                 .style("fill-opacity", "0.4");
 // text elements for time window legend
         svghud.append("text")
-                .attr("x", pad*1.3)
+                .attr("x", pad*3.3)
                 .attr("y", 30)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
@@ -385,7 +402,7 @@ HTMLWidgets.widget({
 // text elements for marker window legend
         svghud.append("text")
                 .attr("class", "hudtxt")
-                .attr("x", w/3.9)
+                .attr("x", w/3.9 + 2*pad)
                 .attr("y", 30)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
@@ -396,7 +413,7 @@ HTMLWidgets.widget({
                 .data([15,35])
                 .enter()
             .append("circle")
-                .attr("cx", w/2)
+                .attr("cx", w/2 + 2*pad)
                 .attr("cy", function(d){return d;})
                 .attr("r", 4)
                 .attr("fill", function(d, i){
@@ -411,17 +428,17 @@ HTMLWidgets.widget({
         svghud.append("path")
                 .style("stroke", "rgb(255,90,0)")
                 .style("stroke-width", "4px")
-                .attr("d", "M"+w/1.5+","+15+"L"+w/1.45+","+15);
+                .attr("d", "M"+(w/1.5+pad)+","+15+"L"+(w/1.45+pad)+","+15);
 //
         svghud.append("path")
                 .style("stroke", "rgb(50,50,50)")
                 .style("stroke-width", "8px")
-                .attr("d", "M"+w/1.5+","+35+"L"+w/1.45+","+35);
+                .attr("d", "M"+(w/1.5+pad)+","+35+"L"+(w/1.45+pad)+","+35);
         svghud.selectAll("legendtxt1")
                 .data([19,40])
                 .enter()
             .append("text")
-                .attr("x", w/2+10)
+                .attr("x", w/2+10 + 2*pad)
                 .attr("y", function(d){return d;})
                 .style("fill", "rgb(50,50,50)")
                 .style("font-family", "Arial")
@@ -435,7 +452,7 @@ HTMLWidgets.widget({
                 .enter()
 // displays legend text for hazard rate and cumulative hazard
             .append("text")
-                .attr("x", w/1.45+5)
+                .attr("x", w/1.45+5 + pad)
                 .attr("y", function(d){return d;})
                 .style("fill", "rgb(50,50,50)")
                 .style("font-family", "Arial")
@@ -458,19 +475,45 @@ HTMLWidgets.widget({
                 .attr("d", hazr);
         svghaz.append("g")
                 .attr("class", "x axis haz")
-                .attr("transform", "translate(0,"+(h-pad)+")")
+                .attr("transform", "translate("+ 2*pad+","+(h-pad)+")")
                 .style("stroke-width", "2px")
                 .call(xAxis);
+// x axis label
+        svghaz.append("g")
+              .append("text")
+              .attr("class", "x haz label")
+              .attr("text-anchor", "end")
+              .attr("x", w/2 + 2*pad)
+              .attr("y", h + 20)
+              .text("time");
         svghaz.append("g")
                 .attr("class", "y axis haz")
-                .attr("transform", "translate("+(w-pad)+",0)")
+                .attr("transform", "translate("+(w+pad)+",0)")
                 .style("stroke-width", "2px")
                 .call(yAxishaz);
+// y haz axis label
+        svghaz.append("g")
+              .append("text")
+              .attr("x", -200)
+              .attr("y", w + 3*pad)
+              .attr("class", "y haz label")
+              .attr("transform", "rotate(-90)")
+              .attr("text-anchor", "middle")
+              .text("hazard rate");
         svghaz.append("g")
                 .attr("class", "y axis NA")
-                .attr("transform", "translate("+(pad)+",0)")
+                .attr("transform", "translate("+(3*pad)+",0)")
                 .style("stroke-width", "2px")
                 .call(yAxisNA);
+// y axis cumulative label
+        svghaz.append("g")
+              .append("text")
+              .attr("x", -200)
+              .attr("y", 2 + pad)
+              .attr("class", "y haz NA label")
+              .attr("transform", "rotate(-90)")
+              .attr("text-anchor", "middle")
+              .text("cumulative hazard");
 
 // function to return data from subselection of variables from bbox coordinates
 // ??? for some reason this code has to be INSIDE the mgr() function in order to
@@ -606,6 +649,8 @@ HTMLWidgets.widget({
             scat.selectAll("circle")
                     .transition().duration(1000)
                     .attr("cy", function(d){return yScale(+d[cc]);});
+            scat.select("text.y.label")
+                    .text(cc);
 // y axis is plotted in scatterplot based on new variable selection
             scat.select(".y.axis")
                     .transition().duration(1000)
@@ -637,6 +682,8 @@ HTMLWidgets.widget({
             scat.selectAll("circle")
                     .transition().duration(1000)
                     .attr("cy", function(d){return yScale(+d[cc]);});
+             scat.select("text.y.label")
+                    .text(cc);
 // y axis is plotted in scatterplot based on new variable selection
             scat.select(".y.axis")
                     .transition().duration(1000)
