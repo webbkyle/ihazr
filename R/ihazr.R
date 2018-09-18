@@ -32,7 +32,16 @@
 #'     protime = log(protime))
 #' ihazr(time=pbc5[,1], status=pbc5[,2], marker=pbc5[,3:7])
 #'
-#' Example 3 - in a Shiny app
+#' Example 3 - Drop down selector
+#' library(survival)
+#' library(dplyr)
+#' pbc5 <- pbc %>%
+#'  slice(1:312) %>%
+#'  mutate(time = time/365, status = (status==2)*1, bili = log(bili),
+#'    protime = log(protime))
+#' ihazr(time=pbc5[,2], status=pbc5[,3], marker=pbc5[,4:20], buttons = F)
+#'
+#' Example 4 - in a Shiny app
 #' library(shiny)
 #' library(survival)
 #' library(dplyr)
@@ -57,6 +66,9 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL, buttons = T
     )
     x <- cbind(x, marker)
     x <- x[order(x$time), ]
+    x.factors <- which(sapply(x, is.factor))
+    x[, x.factors] = as.numeric(x[, x.factors])
+
 
     settings <- list(
       buttons = buttons

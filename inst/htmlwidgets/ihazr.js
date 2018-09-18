@@ -30,23 +30,72 @@ HTMLWidgets.widget({
     var nVar = d3.keys(data[1]).length - 2;
     var xPos = w + pad;
     var buttonWidth = w/(nVar) - 10;
-    var buttonTextSize = Math.min(Math.floor(buttonWidth / 6), 30);
+    //var dropdownW = 350;
+    //var dropdownTxt = 20;
+    var buttonTextSize = Math.min(Math.floor(buttonWidth / 6), 26);
+    var binSize = 3;
+    var svgbut;
+    var dropdown;
+    // cc will start as first data variable but will change once clicked
+    var cc = d3.keys(data[1])[2];
 
-// sets the relative area for the number of variables besides time and status
-    var svgbut = d3.select(el).append("svg")
-            .attr("class", "button")
-            .attr("width", w)
-            .attr("height", h/5);
+// if the number of variables is greater than 1, will create the buttons
+        if(nVar > 1 && buttons === true){
+// creates the red rectangles for the variable buttons
+         svgbut = d3.select(el).append("svg")
+                    .attr("class", "button")
+                    .attr("width", w)
+                    .attr("height", h/5);
+          svgbut.selectAll(".rect.buttons")
+                  .data(d3.keys(data[1]).slice(2, nCol))
+                  .enter()
+              .append("rect")
+                  .attr("class", ".buttons")
+                  .attr("x", function(d,i){
+                      //return i*w/(d3.keys(data[1]).length-2)+5;
+                      return i*w/(nVar)+nVar;
+                  })
+                  .attr("y", 5)
+                  .attr("rx", 3)
+                  .attr("ry", 3)
+                  .attr("height", h/5-10)
+                  .attr("width", buttonWidth)
+                  .style("fill-opacity", 1)
+                  .style("fill", "rgb(200,50,50)");
+    // puts the labels of the variables in the buttons
+          svgbut.selectAll(".text.buttons")
+                  .data(d3.keys(data[1]).slice(2, nCol))
+                  .enter()
+              .append("text")
+                  .attr("x", function(d,i){
+                      return (i+0.5)*w/(nVar);
+                  })
+                  .attr("y", h/10+2)
+                  .attr("text-anchor", "middle")
+                  .style("stroke", "rgb(250,250,250)")
+                  .style("fill", "white")
+                  .style("font-weight", "bold")
+                  .style("font-family", "Courier")
+                  .style("font-size", buttonTextSize + "px")
+                  .text(function(d){return d;});
+        } else if(nVar > 1 && buttons === false){
+// creates a drop down feature for selecting variables that can be typed into
+          dropdown = d3.select(el).append("select")
+                        //.on("change", change)
+                        .attr("class", 'DD');
 
-    var dropdown = d3.select(el).append("svg")
-            .attr("class", "dropdown")
-            .attr("width", w/5)
-            .attr("height", h/5);
+          var options = dropdown.selectAll('option')
+                                .data(d3.keys(data[1]).slice(2, nCol));
 
+              options.enter()
+                      .append("option")
+                      .attr('value', function(d) { return d; })
+                      .text(function(d) { return d; });
+        }
 
 // sets the relative area for the entire scatterplot svg element
     var svg = d3.select(el).append("svg")
-                     .attr("class", "scatter")
+                     .attr("class", "main")
                      .attr("width", wFull)
                      .attr("height", h);
 
@@ -62,14 +111,16 @@ HTMLWidgets.widget({
                      .attr("width", wFull)
                      .attr("height", h);
 
+    var svgtest = d3.select(el).append("svg")
+                     .attr("class", "test")
+                     .attr("width", wFull)
+                     .attr("height", h);
+
 // sets empty dataframe to be populated when clicked on dataregion in scatter
     var datasub = [];
 // initial start for mouse location [x, y]
     var mouse = [w,h/2];
     var mouseold = [w,h/2];
-// cc will start as first data variable but will change once clicked
-    var cc = d3.keys(data[1])[2];
-    //var cc = 0;
 // freeze indicates if the scatterplot has been clicked (1, 2, 3) or not (0)
     var freeze = 0;
 // refresh indicates if a button has been clicked (1) or not (0)
@@ -89,6 +140,7 @@ HTMLWidgets.widget({
     }
 
 // epanechnikov Kernel used for nonparametric density estimation
+// scale will be the variable binSize
     function epanechnikovKernel(scale) {
       return function(u) {
 // if the absolute value of u/scale is less than or
@@ -97,14 +149,6 @@ HTMLWidgets.widget({
         return Math.abs(u /= scale) <= 1 ? 0.75 * (1 - u * u) / scale : 0;
       };
     }
-
-// gaussian kernel where s is the standard deviation (set to 1)
-    function gaussianKernel(u, s = 1) {
-      return function(x) {
-        return Math.abs(x /= s) <= 1 ? 1/(Math.sqrt(2*Math.PI)*s) * exp(-((x-u)/s)^2) : 0;
-        };
-    }
-
 
 // other nonparametric kernel smoothing funcitons: gaussian, uniform, triangle,
 // triweight, cosine
@@ -133,6 +177,14 @@ HTMLWidgets.widget({
         var yScaleNA = d3.scale.linear()
             .domain([0, 3])
             .range([h-pad*1.5, pad*1.5]);
+/*// x and y scale for bin selector
+        var xScaleKern = d3.scale.linear()
+            .domain([0, 5])
+            .range([pad*1.5, w-pad*1.5]);*/
+        var yScaleKern = d3.scale.linear()
+            .domain([0, 2])
+            .range(h-pad*1.5, pad*1.5);
+
 // x scale (under the current variable selected) for cursor-data selection rect
 // left side
         var mxtocov = d3.scale.linear()
@@ -151,6 +203,8 @@ HTMLWidgets.widget({
         var yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
 // y axis for hazard cdf (left side)
         var yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
+// kernel viz x axis
+        //var xAxisKern = d3.svg.axis().scale(xScaleKern).orient("bottom").ticks(10);
 // meval is the yScaled position of the mouse for the scatterplot
 // bm is the x position of the mouse divided by 2 (to place the cursor in the
 // middle of the gray box)
@@ -163,63 +217,23 @@ HTMLWidgets.widget({
             mouse = d3.mouse(this);
         });
 
-// if the number of variables is greater than 1, will create the buttons
-        if(nVar > 1 && buttons === true){
-// creates the red rectangles for the variable buttons
-          svgbut.selectAll(".rect.buttons")
-                  .data(d3.keys(data[1]).slice(2, nCol))
-                  .enter()
-              .append("rect")
-                  .attr("class", ".buttons")
-                  .attr("x", function(d,i){
-                      //return i*w/(d3.keys(data[1]).length-2)+5;
-                      return i*w/(nVar)+nVar;
-                  })
-                  .attr("y", 5)
-                  .attr("rx", 3)
-                  .attr("ry", 3)
-                  .attr("height", h/5-10)
-                  .attr("width", buttonWidth)
-                  .style("fill-opacity", 1)
-                  .style("fill", "rgb(200,50,50)");
-    // puts the labels of the variables in the buttons
-          svgbut.selectAll(".text.buttons")
-                  .data(d3.keys(data[1]).slice(2, nCol))
-                  .enter()
-              .append("text")
-                  .attr("x", function(d,i){
-                      return (i+0.5)*w/(nVar);
-                  })
-                  .attr("y", h/10+2)
-                  .attr("text-anchor", "middle")
-                  .style("fill", "rgb(250,250,250)")
-                  .style("font-weight", "bold")
-                  .style("font-family", "Courier")
-                  .style("font-size", buttonTextSize + "px")
-                  .text(function(d){return d;});
-        } else if(nVar > 1 && buttons === false){
-// creates a drop down feature for selecting variables that can be typed into
-          /*svgbut.append("text")
-                .attr("class", ".buttons")
-                .attr("contentEditable", true)
-                .text(function(d) {return d.text;} )
-                .on("keyup", function(d) { d.text = d3.select(this).text();});*/
+// creates scatter plot
+        var scat = svg.append("g")
+                      .attr("class", "scatter")
+                      .attr("width", wFull)
+                      .attr("height", h);
 
-          var options  = dropdown.append("select")
-                              .selectAll("option")
-                                .data(d3.keys(data[1]).slice(2, nCol))
-                                .enter()
-                                .append("option");
+// creates large white rectangle for cursor=crosshair area
+        scat.append("rect")
+                .attr("class", "whiteRect")
+                .attr("x", pad)
+                .attr("y", 0)
+                .attr("height", h)
+                .attr("width", w)
+                .attr("fill", "white");
 
-          options.text(function(d) {
-              return d;
-               })
-                  .attr("value", function(d) {
-                  return d;
-                  });
-        }
 // makes circles visible in the scatterplot graph
-        svg.selectAll("circle")
+        scat.selectAll("circle")
                 .data(data)
                 .enter()
                 .append("circle")
@@ -234,19 +248,19 @@ HTMLWidgets.widget({
                     })
                     .style("stroke", "rgb(70,70,70)");
 // adds the x axis to the scatterplot
-        svg.append("g")
+        scat.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0,"+(h-pad)+")")
                 .style("stroke-width", "2px")
                 .call(xAxis);
 // adds the y axis to the scatterplot
-        svg.append("g")
+        scat.append("g")
                 .attr("class", "y axis")
                 .attr("transform", "translate("+(pad)+",0)")
                 .style("stroke-width", "2px")
                 .call(yAxis);
 // shows the gray rectangle used for selecting data
-        svg.append("rect")
+        scat.append("rect")
                 .attr("class", "grayrect")
                 .attr("x", pad)
                 .attr("y", mouse[1]-covtoh(bm))
@@ -254,12 +268,14 @@ HTMLWidgets.widget({
                 .attr("width", w)
                 .attr("fill", "gray")
                 .attr("fill-opacity", 0.4);
-// svg elements for time bounds which will pop up in after second and
+
+        //kern.append("line")
+/*// svg elements for time bounds which will pop up in after second and
 // third clicks
         svg.append("text")
                 .attr("class", "time1");
         svg.append("text")
-                .attr("class", "time2");
+                .attr("class", "time2");*/
 // minY value selected
         svg.append("text")
                 .attr("class", "minYtxt")
@@ -278,6 +294,24 @@ HTMLWidgets.widget({
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text("Maximum " + cc + " selected:");
+// binSize selected
+        svg.append("text")
+                .attr("class", "binSelect")
+                .attr("x", w + pad*2.5)
+                .attr("y", pad + 70)
+                .style("fill", "rgb(50,50,50")
+                .style("font-family", "Arial")
+                .style("font-size", "18px")
+                .text("Bin Size: " + binSize);
+
+        d3.select(".binSelect").on("click", function(){
+          console.log("got it");
+        });
+
+/*// sets the x and y coordinates of the epinechnikov kernel estimator
+        var kernie = d3.svg.line()
+            .x(function(d){return xScaleKern(d[0]);})
+            .y(function(d){return yScaleKern(d[1]);});*/
 // plots the x and y coordinates of the hazard pdf
         var hazr = d3.svg.line()
             .x(function(d){return xScale(d[0]);})
@@ -308,11 +342,28 @@ HTMLWidgets.widget({
         });
         datasub.push([trange[1], 0, datasub[datasub.length-1][3], 0]);
         datasub.unshift([trange[0], 0, 0, 0]);
+        console.log(datasub);
 // using an epanechnikov kernel with a scale of 1, holds the calculations of the
 // kernel for over 100 points for the time variable scaled along the x axis
-        var khe = kernelhazardEstimator(epanechnikovKernel(1), xScale.ticks(100));
+        var khe = kernelhazardEstimator(epanechnikovKernel(binSize), xScale.ticks(100));
 // use previously defined kernel on data selected
         var khedata = khe(datasub);
+        /*console.log(khedata);
+        var test = kernelhazardEstimator(epanechnikovKernel(binSize), xScale.ticks(100));
+        console.log(test([1,2,3,1]));
+        console.log(test([[1,0,0,1],
+                          [3,4,52,1],
+                          [1,2,3,2]]));
+// plot the kernel sampling for estimating bin size
+        test.append("path")
+            .datum([0,1,2,2])
+            .style("fill","rgb(50,50,50)")
+            .style("shape-rendering", "crispEdges");
+
+        test.append("g")
+                .attr("class", "x axis kern")
+                .style("stroke-width", "2px")
+                .call(xAxisKern);*/
 
         // BEGIN VERY MESSY LEGEND CODE
 // sets location and color of time and marker window legend
@@ -422,10 +473,12 @@ HTMLWidgets.widget({
                 .call(yAxisNA);
 
 // function to return data from subselection of variables from bbox coordinates
+// ??? for some reason this code has to be INSIDE the mgr() function in order to
+// account for categorical variables and selecting accross levels correctly
         var retDatasub = function(boxX, boxY){
           datasub = [];
             data.forEach(function(d){
-                if(+d[cc]>(boxY-boxX) & +d[cc]<boxY+boxY){
+                if(+d[cc]>(boxY-boxX) && +d[cc]<(boxY+boxY)){
                     datasub.push([+d.time, 0, 0, +d.status]);
                 }
             });
@@ -461,16 +514,34 @@ HTMLWidgets.widget({
 
 
 // function to update subset of data based on variable chosen
-        function mgr(){
+        var mgr = function(){
 // if statement helps to mitigate cpu workload by returning zero IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN mgr will exit w/o calculating anything
             if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze!==0) && refresh===0){
+                return 0;
+            } else if(buttons === false && refresh === 1){
                 return 0;
             }
             meval = yScale.invert(mouse[1]);
             bm = mxtocov(mouse[0])/2;
             rectMax = yScale.invert(mouse[1]-covtoh(bm));
             rectMin = yScale.invert(mouse[1]+covtoh(bm));
-            datasub = retDatasub(bm, meval);
+            //datasub = retDatasub(bm, meval);
+            datasub = [];
+            data.forEach(function(d){
+                if(+d[cc]>(meval-bm) && +d[cc]<(bm+meval)){
+                    datasub.push([+d.time, 0, 0, +d.status]);
+                }
+            });
+            datasub.forEach(function(d, i){
+                datasub[i][1] = 1/(datasub.length-i);
+                if(i>0){
+                    datasub[i][2] = datasub[i][1]*datasub[i][3] + datasub[i-1][2];
+                } else{
+                    datasub[i][2] = datasub[i][1]*datasub[i][3];
+                }
+            });
+            datasub.push([trange[1], 0, datasub[datasub.length-1][3], 0]);
+            datasub.unshift([trange[0], 0, 0, 0]);
             khedata = khe(datasub);
             svghaz.select("path.hazline")
                     .datum(khedata)
@@ -480,7 +551,7 @@ HTMLWidgets.widget({
             svghaz.select("path.nahazline")
                     .datum(datasub)
                     .attr("d", nahaz);
-            svg.select(".grayrect")
+            scat.select(".grayrect")
                     .attr("y", mouse[1]-covtoh(bm))
                     .attr("height", covtoh(mxtocov(mouse[0])));
             svg.select("text.minYtxt")
@@ -493,14 +564,14 @@ HTMLWidgets.widget({
                     .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));
             mouseold = mouse;
             refresh = 0;
-        }
+        };
 
 // calls mgr every 10 miliseconds
         setInterval(mgr, 10);
 
-        svgbut.on("click", function(){
-
-
+// if the number of variables is greater than 1, will create the buttons
+        if(nVar > 1 && buttons === true){
+          svgbut.on("click", function(){
 // gray rectangle is set to unclicked
             freeze = 0;
 // indicates that a new variable button has been clicked
@@ -532,14 +603,47 @@ HTMLWidgets.widget({
 // new y axis calculated based on new y scale defined above
             yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
 // circles are plotted based on new y scale values
-            svg.selectAll("circle")
+            scat.selectAll("circle")
                     .transition().duration(1000)
                     .attr("cy", function(d){return yScale(+d[cc]);});
 // y axis is plotted in scatterplot based on new variable selection
-            svg.select(".y.axis")
+            scat.select(".y.axis")
                     .transition().duration(1000)
                     .call(yAxis);
         });
+        } else if(nVar > 1 && buttons === false){
+            dropdown.on("change", function(){
+              freeze = 0;
+              cc = d3.select(this).property('value');
+              covrange = [d3.min(data, function(d){return +d[cc];}),
+              d3.max(data, function(d){return +d[cc];})];
+// y scale changed based on new covrange after new variable clicked
+            yScale
+                .domain(covrange)
+                .range([h-pad*1.5, pad*1.5]);
+// !!! hazrange for the first varibale in the marker list (right now this is "age")
+            hazrange = [0, d3.max(data, function(d){return khe(+d[cc]);})];
+// changes the size of gray rect for cursor-data selection on the left
+            mxtocov
+                .domain([pad*1.5, w-pad*1.5])
+                .range([0, covrange[1]-covrange[0]]);
+// changes the size of gray rect for cursor-data selection on the right side
+            covtoh
+                .domain([0, covrange[1]-covrange[0]])
+                .range([0, h-pad*3]);
+// new y axis calculated based on new y scale defined above
+            yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
+// circles are plotted based on new y scale values
+            scat.selectAll("circle")
+                    .transition().duration(1000)
+                    .attr("cy", function(d){return yScale(+d[cc]);});
+// y axis is plotted in scatterplot based on new variable selection
+            scat.select(".y.axis")
+                    .transition().duration(1000)
+                    .call(yAxis);
+        });
+        }
+
 
 // function that makes the axes in the hazard pdf plot scalable. Will be called
 // once the scatterplot above it is clicked and the subset of data is set
@@ -560,7 +664,7 @@ HTMLWidgets.widget({
               .call(yAxishaz);
           svghaz.selectAll("path.hazline")
               .datum(khedata)
-              .transition().duration(100)
+              .transition().duration(500)
               .attr("d", hazr)
               .call(yAxishaz);
           yScaleNA
@@ -568,16 +672,11 @@ HTMLWidgets.widget({
           yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
           svghaz.select("path.nahazline")
               .datum(datasub)
-              .transition().duration(100)
               .attr("d", nahaz)
               .call(yAxisNA);
           svghaz.select(".y.axis.NA")
               .transition().duration(500)
               .call(yAxisNA);
-        };
-
-        var timebounds = function(data){
-
         };
 
 // on the click of the scatterplot and setting of the gray rectangle bounds,
@@ -593,34 +692,8 @@ HTMLWidgets.widget({
                 freeze=1;
                 scalable();
             }
-            /*else if(freeze===1){
-                freeze += 1;
-                var tMouse = d3.mouse(this)[0];
-                svg.select("text.time1")
-                    .attr("x", w + pad*2.5)
-                    .attr("y", pad + 100)
-                    .style("fill", "rgb(50,50,50")
-                    .style("font-family", "Arial")
-                    .style("font-size", "18px")
-                    .text("Minimum time selected:  " + d3.round(xScale.invert(tMouse), 2));
-            }
-            else if(freeze===2){
-                freeze += 1;
-                var tMouse2 = d3.mouse(this)[0];
-                svg.select("text.time2")
-                    .attr("x", w + pad*2.5)
-                    .attr("y", pad + 130)
-                    .style("fill", "rgb(50,50,50")
-                    .style("font-family", "Arial")
-                    .style("font-size", "18px")
-                    .text("Maximum time selected:  " + d3.round(xScale.invert(tMouse2), 2));
-            }*/
             else{
               freeze=0;
-              /*svg.select("text.time1")
-                    .text("Minimum time selected:  ");
-              svg.select("text.time2")
-                    .text("Maximum time selected:  ");*/
             }
         });
 
