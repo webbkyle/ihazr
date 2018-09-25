@@ -4,14 +4,10 @@ HTMLWidgets.widget({
 
   type: 'output',
 
-// initializes the layout of the svg on the webpage
+// initializes the layout of the webpage
   initialize: function(el, width, height) {
 
     return d3.select(el);
-            /*.append("div")
-              .attr("class", "entire")
-              .attr("width", width)
-              .attr("height", height)*/
 
   },
 
@@ -38,13 +34,14 @@ HTMLWidgets.widget({
     var dropdown;
     // cc will start as first data variable but will change once clicked
     var cc = d3.keys(data[1])[2];
-
+    var maxInSig = 0;
+    var minInSig = 0;
 // if the number of variables is greater than 1, will create the buttons
         if(nVar > 1 && buttons === true){
 // creates the red rectangles for the variable buttons
          svgbut = d3.select(el).append("svg")
                     .attr("class", "button")
-                    .attr("width", w)
+                    .attr("width", w*2)
                     .attr("height", h/5);
           svgbut.selectAll(".rect.buttons")
                   .data(d3.keys(data[1]).slice(2, nCol))
@@ -52,8 +49,7 @@ HTMLWidgets.widget({
               .append("rect")
                   .attr("class", ".buttons")
                   .attr("x", function(d,i){
-                      //return i*w/(d3.keys(data[1]).length-2)+5;
-                      return i*w/(nVar)+nVar;
+                      return i*w/(nVar)+nVar+pad*1.5;
                   })
                   .attr("y", 5)
                   .attr("rx", 3)
@@ -68,7 +64,7 @@ HTMLWidgets.widget({
                   .enter()
               .append("text")
                   .attr("x", function(d,i){
-                      return (i+0.5)*w/(nVar);
+                      return (i+0.5)*w/(nVar)+pad*1.5;
                   })
                   .attr("y", h/10+2)
                   .attr("text-anchor", "middle")
@@ -82,7 +78,8 @@ HTMLWidgets.widget({
 // creates a drop down feature for selecting variables that can be typed into
           dropdown = d3.select(el).append("select")
                         //.on("change", change)
-                        .attr("class", 'DD');
+                        .attr("class", 'DD')
+                        .attr("x", 500);
 
           var options = dropdown.selectAll('option')
                                 .data(d3.keys(data[1]).slice(2, nCol));
@@ -93,11 +90,23 @@ HTMLWidgets.widget({
                       .text(function(d) { return d; });
         }
 
+// sets some white space between the plots
+    var svgspace1 = d3.select(el).append("svg")
+                      .attr("class", "space1")
+                      .attr("width", wFull)
+                      .attr("height", 30);
+
 // sets the relative area for the entire scatterplot svg element
     var svg = d3.select(el).append("svg")
                      .attr("class", "main")
                      .attr("width", wFull)
-                     .attr("height", h + 50);
+                     .attr("height", h + 20);
+
+// sets some white space between the plots
+    var svgspace2 = d3.select(el).append("svg")
+                      .attr("class", "space2")
+                      .attr("width", wFull)
+                      .attr("height", 30);
 
 // sets the relative area for the hud element of the scatterplot svg element
     var svghud = d3.select(el).append("svg")
@@ -194,7 +203,7 @@ HTMLWidgets.widget({
 // right side
         var covtoh = d3.scale.linear()
             .domain([0, covrange[1]-covrange[0]])
-            .range([0, h-pad*3]);
+            .range([0, h-pad]);
 // x axis for both scatterplot and hazard pdf and cdf
         var xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(10);
 // y axis for scatterplot
@@ -286,44 +295,48 @@ HTMLWidgets.widget({
                 .attr("fill", "gray")
                 .attr("fill-opacity", 0.4);
 
-        //kern.append("line")
-/*// svg elements for time bounds which will pop up in after second and
-// third clicks
+// maxY value selected
         svg.append("text")
-                .attr("class", "time1");
-        svg.append("text")
-                .attr("class", "time2");*/
-// minY value selected
-        svg.append("text")
-                .attr("class", "minYtxt")
+                .attr("class", "maxYtxt")
                 .attr("x", w + pad*2.5)
                 .attr("y", pad + 10)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
-                .text("Minimum " + cc + " selected:");
-// maxY value selected
+                .text("Maximum " + cc + " selected:");
+// minY value selected
         svg.append("text")
-                .attr("class", "maxYtxt")
-                .attr("x", w + pad*2.5)
-                .attr("y", pad + 40)
+                .attr("class", "minYtxt")
+                .attr("x", parseFloat(d3.select(".maxYtxt").attr("x")))
+                .attr("y", parseFloat(d3.select(".maxYtxt").attr("y")) + 50)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
-                .text("Maximum " + cc + " selected:");
+                .text("Minimum " + cc + " selected:");
+// Number of datapoints selected
+        svg.append("text")
+                .attr("class", "nData")
+                .attr("x", parseFloat(d3.select(".maxYtxt").attr("x")))
+                .attr("y", parseFloat(d3.select(".minYtxt").attr("y")) + 50)
+                .style("fill", "rgb(50,50,50")
+                .style("font-family", "Arial")
+                .style("font-size", "18px")
+                .text("N:");
 // binSize selected
         svg.append("text")
                 .attr("class", "binSelect")
-                .attr("x", w + pad*2.5)
-                .attr("y", pad + 70)
+                .attr("x", parseFloat(d3.select(".minYtxt").attr("x")))
+                .attr("y", parseFloat(d3.select(".nData").attr("y") ) + 50)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
                 .text("Bin Size: " + binSize);
 
-        d3.select(".binSelect").on("click", function(){
+        d3.select(".binSelect").on("dblclick", function(){
           console.log("got it");
         });
+
+
 
 /*// sets the x and y coordinates of the epinechnikov kernel estimator
         var kernie = d3.svg.line()
@@ -365,22 +378,6 @@ HTMLWidgets.widget({
         var khe = kernelhazardEstimator(epanechnikovKernel(binSize), xScale.ticks(100));
 // use previously defined kernel on data selected
         var khedata = khe(datasub);
-        /*console.log(khedata);
-        var test = kernelhazardEstimator(epanechnikovKernel(binSize), xScale.ticks(100));
-        console.log(test([1,2,3,1]));
-        console.log(test([[1,0,0,1],
-                          [3,4,52,1],
-                          [1,2,3,2]]));
-// plot the kernel sampling for estimating bin size
-        test.append("path")
-            .datum([0,1,2,2])
-            .style("fill","rgb(50,50,50)")
-            .style("shape-rendering", "crispEdges");
-
-        test.append("g")
-                .attr("class", "x axis kern")
-                .style("stroke-width", "2px")
-                .call(xAxisKern);*/
 
         // BEGIN VERY MESSY LEGEND CODE
 // sets location and color of time and marker window legend
@@ -518,13 +515,22 @@ HTMLWidgets.widget({
 // function to return data from subselection of variables from bbox coordinates
 // ??? for some reason this code has to be INSIDE the mgr() function in order to
 // account for categorical variables and selecting accross levels correctly
-        var retDatasub = function(boxX, boxY){
-          datasub = [];
-            data.forEach(function(d){
-                if(+d[cc]>(boxY-boxX) && +d[cc]<(boxY+boxY)){
+        var retDatasub = function(boxX, boxY, input){
+            var datasub = [];
+            if(input===false){
+              data.forEach(function(d){
+                if(+d[cc]>=(boxY - boxX) && +d[cc]<=(boxX + boxY)){
                     datasub.push([+d.time, 0, 0, +d.status]);
                 }
-            });
+              });
+            }
+            else{
+              data.forEach(function(d){
+                if(+d[cc]>=boxX && +d[cc]<=boxY){
+                    datasub.push([+d.time, 0, 0, +d.status]);
+                }
+              });
+            }
             datasub.forEach(function(d, i){
                 datasub[i][1] = 1/(datasub.length-i);
                 if(i>0){
@@ -554,24 +560,22 @@ HTMLWidgets.widget({
           //console.log(d3.max(L2));
           return d3.max(L2);
         };
-
-
 // function to update subset of data based on variable chosen
         var mgr = function(){
 // if statement helps to mitigate cpu workload by returning zero IF (mouse hasn't moved OR scatterplot is clicked) AND (no button has been pressed) THEN mgr will exit w/o calculating anything
             if(((mouseold[0]==mouse[0] && mouseold[1]==mouse[1]) || freeze!==0) && refresh===0){
-                return 0;
+                return;
             } else if(buttons === false && refresh === 1){
-                return 0;
+                return;
             }
             meval = yScale.invert(mouse[1]);
             bm = mxtocov(mouse[0])/2;
-            rectMax = yScale.invert(mouse[1]-covtoh(bm));
-            rectMin = yScale.invert(mouse[1]+covtoh(bm));
+            var rectMax = yScale.invert(mouse[1]-covtoh(bm));
+            var rectMin = yScale.invert(mouse[1]+covtoh(bm));
             //datasub = retDatasub(bm, meval);
             datasub = [];
             data.forEach(function(d){
-                if(+d[cc]>(meval-bm) && +d[cc]<(bm+meval)){
+                if(+d[cc]>=(meval-bm) && +d[cc]<=(bm+meval)){
                     datasub.push([+d.time, 0, 0, +d.status]);
                 }
             });
@@ -603,6 +607,8 @@ HTMLWidgets.widget({
             svg.select("text.maxYtxt")
                     .text("Maximum " + cc + " selected:  " +
                     rectMax.toFixed(2));
+            svg.select("text.nData")
+                    .text("N:  " +  String(datasub.length-2));
             svghud.select("text.hudtxt")
                     .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));
             mouseold = mouse;
@@ -625,7 +631,7 @@ HTMLWidgets.widget({
 // looks at the "key" names of the data and slices off all the data with the key
 // selected
             cc = d3.keys(data[1]).slice(2, nCol)[
-              Math.floor(mt/(w/(nVar)))];
+              Math.floor((mt-nVar-pad*1.5)/(w/nVar))];
 // indicates the range of the selected variable
             covrange = [d3.min(data, function(d){return +d[cc];}),
               d3.max(data, function(d){return +d[cc];})];
@@ -695,36 +701,205 @@ HTMLWidgets.widget({
 // function that makes the axes in the hazard pdf plot scalable. Will be called
 // once the scatterplot above it is clicked and the subset of data is set
         var scalable = function(){
-          meval = yScale.invert(mouse[1]);
-          bm = mxtocov(mouse[0])/2;
-          datasub = retDatasub(bm, meval);
-          khedata = khe(datasub);
-          maxNA = maxdat(datasub, 'hazNA');
-          maxkhe = maxdat(khedata, 'haz');
-          yhazRange = [0, maxkhe + maxkhe/4];
-          yRange = [0, maxNA + maxNA/7];
-          yScalehaz
-              .domain(yhazRange);
-          yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
-          svghaz.select(".y.axis.haz")
-              .transition().duration(500)
-              .call(yAxishaz);
-          svghaz.selectAll("path.hazline")
-              .datum(khedata)
-              .transition().duration(500)
-              .attr("d", hazr)
-              .call(yAxishaz);
-          yScaleNA
-              .domain(yRange);
-          yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
-          svghaz.select("path.nahazline")
-              .datum(datasub)
-              .attr("d", nahaz)
-              .call(yAxisNA);
-          svghaz.select(".y.axis.NA")
-              .transition().duration(500)
-              .call(yAxisNA);
+            meval = yScale.invert(mouse[1]);
+            bm = mxtocov(mouse[0])/2;
+            datasub = retDatasub(bm, meval, false);
+            khedata = khe(datasub);
+            maxNA = maxdat(datasub, 'hazNA');
+            maxkhe = maxdat(khedata, 'haz');
+            yhazRange = [0, maxkhe + maxkhe/4];
+            yRange = [0, maxNA + maxNA/7];
+            yScalehaz
+                .domain(yhazRange)
+                .range([h-pad*1.5, pad*1.5]);
+            yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
+            svghaz.select(".y.axis.haz")
+                .transition().duration(500)
+                .call(yAxishaz);
+            svghaz.selectAll("path.hazline")
+                .datum(khedata)
+                .transition().duration(500)
+                .attr("d", hazr)
+                .call(yAxishaz);
+            yScaleNA
+                .domain(yRange)
+                .range([h-pad*1.5, pad*1.5]);
+            yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
+            svghaz.select("path.nahazline")
+                .datum(datasub)
+                .attr("d", nahaz)
+                .call(yAxisNA);
+            svghaz.select(".y.axis.NA")
+                .transition().duration(500)
+                .call(yAxisNA);
         };
+
+      var scalable2 = function(rectMin, rectMax){
+            datasub = retDatasub(rectMin, rectMax, true)
+            khedata = khe(datasub);
+            maxNA = maxdat(datasub, 'hazNA');
+            maxkhe = maxdat(khedata, 'haz');
+            yhazRange = [0, maxkhe + maxkhe/4];
+            yRange = [0, maxNA + maxNA/7];
+            yScalehaz
+                .domain(yhazRange);
+            yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
+            svghaz.select(".y.axis.haz")
+                .transition().duration(500)
+                .call(yAxishaz);
+            svghaz.selectAll("path.hazline")
+                .datum(khedata)
+                .transition().duration(500)
+                .attr("d", hazr)
+                .call(yAxishaz);
+            yScaleNA
+                .domain(yRange);
+            yAxisNA = d3.svg.axis().scale(yScaleNA).orient("left").ticks(10);
+            svghaz.select("path.nahazline")
+                .datum(datasub)
+                .attr("d", nahaz)
+                .call(yAxisNA);
+            svghaz.select(".y.axis.NA")
+                .transition().duration(500)
+                .call(yAxisNA);
+            svg.select("text.nData")
+                  .text("N:  " + (datasub.length-2));
+        };
+
+        /*d3.select('main').on("click", function(){
+            d3.select(".maxYtxt").style("opacity", 1);
+          })*/
+
+// sets input fields for variables
+        d3.select(".minYtxt").on("click", function(){
+            minInSig += 1;
+            if(minInSig===1){
+              d3.select(".minYtxt").style("opacity", 0);
+              var minInput = d3.select(el).append("input")
+                                .attr("class", 'minIn')
+                                .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
+              if(maxInSig>=1){
+                d3.select('.maxIn').remove();
+                d3.select(".maxYtxt").style("opacity", 1);
+                maxInSig = 0;
+              }
+            } else if(minInSig===2){
+              if(maxInSig>=1){
+                d3.select('.maxIn').remove();
+                d3.select(".maxYtxt").style("oppacity", 1)
+                maxInSig = 0;
+              }
+              d3.select('.minIn').remove();
+              d3.select(".minYtxt").style("opacity", 0);
+              minInput = d3.select(el).append("input")
+                                .attr("class", 'minIn')
+                                .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
+            } else{
+              minInSig = 1;
+            }
+        });
+
+        d3.select(".maxYtxt").on("click", function(){
+            maxInSig += 1;
+            if(maxInSig===1){
+              d3.select(".maxYtxt").style("opacity", 0);
+              var maxInput = d3.select(el).append("input")
+                                .attr("class", 'maxIn')
+                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+              if(minInSig>=1){
+                d3.select('.minIn').remove();
+                d3.select(".minYtxt").style("opacity", 1);
+                minInSig = 0;
+              }
+            } else if(maxInSig===2){
+              if(minInSig>=1){
+                d3.select('.minIn').remove();
+                d3.select(".minYtxt").style("oppacity", 1)
+                minInSig = 0;
+              }
+              d3.select('.maxIn').remove()
+              d3.select(".maxYtxt").style("opacity", 0);
+              maxInput = d3.select(el).append("input")
+                                .attr("class", 'maxIn')
+                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+            } else{
+              maxInSig = 1;
+            }
+        });
+
+        d3.select(".scatter").on("click", function(){
+          d3.select(".minYtxt").style("opacity", 1);
+          d3.select(".maxYtxt").style("opacity", 1);
+          if(freeze === 0){
+            freeze = 1;
+            scalable();
+          }
+          else{
+            freeze = 0;
+          }
+          if(maxInSig>0){
+            d3.select('.maxIn').remove()
+          } else if (minInSig>0){
+            d3.select('.minIn').remove()
+          }
+          maxInSig = 0;
+          minInSig = 0;
+        });
+
+        var killInputs = function(){
+          if(mouse[0] > d3.select(".maxYtxt").attr("x")){
+                d3.select(".maxYtxt").style("opacity", 1);
+          }
+        }
+
+        d3.select(el).on("keydown", function () {
+          rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
+          rectMin = parseFloat(d3.select("text.minYtxt").text().split(" ")[4]);
+          console.log(rectMax);
+          console.log(rectMin);
+          mouseY = mouse[1];
+          if (d3.event.keyCode === 13 && maxInSig >= 1) {
+            if(d3.select(".maxIn").node().value == ''){
+              change = parseFloat(yScale(rectMax));
+              hchange = covtoh(rectMax - rectMin);
+            } else{
+              change = parseFloat(yScale(d3.select(".maxIn").node().value));
+              hchange = covtoh(d3.select(".maxIn").node().value - rectMin);
+              rectMax = parseFloat(d3.select(".maxIn").node().value);
+            }
+            freeze = 1;
+            d3.select('.grayrect')
+              .attr("y", change);
+            d3.select('.grayrect')
+              .attr("height", hchange)
+            d3.select('.maxIn').remove()
+            d3.select(".maxYtxt")
+              .style("opacity", 1);
+            svg.select("text.maxYtxt")
+                  .text("Maximum " + cc + " selected:  " +
+                  rectMax.toFixed(2));
+            scalable2(rectMin, rectMax);
+            return rectMax;
+          } else if (d3.event.keyCode === 13 && minInSig >= 1) {
+            if(d3.select(".minIn").node().value == ''){
+              change = parseFloat(covtoh(rectMax - rectMin));
+            } else{
+              change = parseFloat(covtoh(rectMax - d3.select(".minIn").node().value));
+              rectMin = parseFloat(d3.select(".minIn").node().value);
+            }
+            freeze = 1;
+            d3.select('.grayrect')
+              .attr("height", change)
+            d3.select('.minIn').remove()
+            d3.select(".minYtxt")
+              .style("opacity", 1);
+            svg.select("text.minYtxt")
+                  .text("Minimum " + cc + " selected:  " +
+                  rectMin.toFixed(2));
+            scalable2(rectMin, rectMax);
+            return rectMin;
+          }
+        })
 
 // on the click of the scatterplot and setting of the gray rectangle bounds,
 // the freeze value will be set to 1 to initailly scale the hazard function and
@@ -734,7 +909,7 @@ HTMLWidgets.widget({
 // freeze will then be set to 3 on the third click of the svg element and the
 // maximum time bound will be selected.
 // Lastly, freeze will be reset to 0 on the fourth click
-        svg.on("click", function(){
+       /* svg.on("click", function(){
             if(freeze===0){
                 freeze=1;
                 scalable();
@@ -742,7 +917,7 @@ HTMLWidgets.widget({
             else{
               freeze=0;
             }
-        });
+        });*/
 
 
   }//,

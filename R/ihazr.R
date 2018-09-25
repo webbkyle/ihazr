@@ -67,7 +67,7 @@ ihazr <- function(time, status, marker, width = NULL, height = NULL, buttons = T
     x <- cbind(x, marker)
     x <- x[order(x$time), ]
     x.factors <- which(sapply(x, is.factor))
-    x[, x.factors] = as.numeric(x[, x.factors])
+    x[, x.factors] = as.numeric(x[, x.factors]) - 1
 
 
     settings <- list(
