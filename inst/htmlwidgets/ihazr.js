@@ -32,9 +32,10 @@ HTMLWidgets.widget({
     // Button display variables
          buttonWidth = w/(nVar) - 10,
          buttonTextSize = Math.min(Math.floor(buttonWidth / 6), 26),
-    // Bin size default setting is 2, and max is 3 (to start)
-         binSize = 2,
+    // Bin size default setting is 2 unless the binMax argument is less than 2
+    // Bin max default is 10
          binMax = x.settings.binMax,
+         binSize = Math.min(2, binMax),
     // empty variables for button or dropdown display
          svgbut,
          dropdown,
@@ -309,11 +310,11 @@ HTMLWidgets.widget({
             .range([h-pad*1.5, pad*1.5]);
         yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
         svghaz.select(".y.axis.haz")
-            .transition().duration(500)
+            .transition().duration(250)
             .call(yAxishaz);
         svghaz.selectAll("path.hazline")
             .datum(khedata)
-            .transition().duration(500)
+            .transition().duration(250)
             .attr("d", hazr)
             .call(yAxishaz);
         yScaleNA
@@ -325,7 +326,7 @@ HTMLWidgets.widget({
             .attr("d", nahaz)
             .call(yAxisNA);
         svghaz.select(".y.axis.NA")
-            .transition().duration(500)
+            .transition().duration(250)
             .call(yAxisNA);
     };
 
@@ -341,11 +342,11 @@ HTMLWidgets.widget({
               .domain(yhazRange);
           yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
           svghaz.select(".y.axis.haz")
-              .transition().duration(500)
+              .transition().duration(250)
               .call(yAxishaz);
           svghaz.selectAll("path.hazline")
               .datum(khedata)
-              .transition().duration(500)
+              .transition().duration(250)
               .attr("d", hazr)
               .call(yAxishaz);
           yScaleNA
@@ -356,7 +357,7 @@ HTMLWidgets.widget({
               .attr("d", nahaz)
               .call(yAxisNA);
           svghaz.select(".y.axis.NA")
-              .transition().duration(500)
+              .transition().duration(250)
               .call(yAxisNA);
           svg.select("text.nData")
                 .text("N:  " + (datasub.length-2));
@@ -364,6 +365,12 @@ HTMLWidgets.widget({
 
       // scalable 3 is used when the binSize is changed by the user
       var scalable3 = function(rectMin, rectMax, binSize){
+          svg.select("text.maxYtxt")
+                  .text("Maximum " + cc + " :  " +
+                  rectMax.toFixed(2));
+          svg.select("text.minYtxt")
+                  .text("Minimum " + cc + " :  " +
+                  rectMin.toFixed(2));
           datasub = retDatasub(rectMin, rectMax, true);
           khe = kernelhazardEstimator(epanechnikovKernel(binSize), xScale.ticks(300));
           khedata = khe(datasub);
@@ -375,11 +382,11 @@ HTMLWidgets.widget({
               .domain(yhazRange);
           yAxishaz = d3.svg.axis().scale(yScalehaz).orient("right").ticks(10);
           svghaz.select(".y.axis.haz")
-              .transition().duration(500)
+              .transition().duration(100)
               .call(yAxishaz);
           svghaz.selectAll("path.hazline")
               .datum(khedata)
-              .transition().duration(500)
+              .transition().duration(100)
               .attr("d", hazr)
               .call(yAxishaz);
           yScaleNA
@@ -390,7 +397,7 @@ HTMLWidgets.widget({
               .attr("d", nahaz)
               .call(yAxisNA);
           svghaz.select(".y.axis.NA")
-              .transition().duration(500)
+              .transition().duration(100)
               .call(yAxisNA);
           svg.select("text.nData")
                 .text("N:  " + (datasub.length-2));
@@ -559,12 +566,12 @@ HTMLWidgets.widget({
   // creates rectangle for bin selection interaction
         svg.append("rect")
                 .attr("class", "binInteract")
-                .attr("x", parseFloat(d3.select(".minYtxt").attr("x")) + 10)
+                .attr("x", parseFloat(d3.select(".minYtxt").attr("x")))
                 .attr("y", 380)
                 .attr("height", 50)
                 .attr("width", 300 + pad)
-                //.attr("fill", "rgb(50,50,50)");
-                .attr("fill", "white");
+                .attr("fill", "rgb(50,50,50)");
+                //.attr("fill", "white");
 
   // Calculate epData for plotting
         epData = [];
@@ -606,8 +613,8 @@ HTMLWidgets.widget({
 
   // sets scale for mouse x coordinate along rectangle to bin selection
       var binInterScale = d3.scale.linear()
-        .domain([parseFloat(d3.select(".binInteract").attr("x")),
-                  parseFloat(d3.select(".binInteract").attr("x")) + 300])
+        .domain([parseFloat(d3.select(".binInteract").attr("x")) + pad,
+                  parseFloat(d3.select(".binInteract").attr("x")) + 300 - pad])
         .range([0.01, binMax]);
 
   // sets freeze to 1 and creates binBurn, which will indicate if black bar is clicked
@@ -631,6 +638,7 @@ HTMLWidgets.widget({
                     }
 
                     binSize = Math.min(binInterScale(mouse[0]), binMax);
+                    binSize = Math.max(binSize, 0.01);
 
                     var xC = binSize * nTimes;
 
@@ -662,6 +670,14 @@ HTMLWidgets.widget({
                     svg.select("text.binSelect")
                         .text("Bin Size : " + d3.round(binSize,2));
 
+                    rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
+                    rectMin = parseFloat(d3.select("text.minYtxt").text().split(" ")[4]);
+                    if(isNaN(rectMax) && isNaN(rectMin)){
+                      rectMax = d3.max(data, function(d){return +d[cc];});
+                      rectMin = d3.min(data, function(d){return +d[cc];});
+                    }
+                    scalable3(rectMin, rectMax, binSize)
+
                     // if clicked, indicate with binBurn, re-evaluate rect Max and Min
                     // from print statements, and scale hazard plot accordingly
                     d3.select(".binInteract").on("click", function(){
@@ -669,13 +685,13 @@ HTMLWidgets.widget({
                       if(binBurn===0){
                         return;
                       }
-                      rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
+                      /*rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
                       rectMin = parseFloat(d3.select("text.minYtxt").text().split(" ")[4]);
                       if(isNaN(rectMax) && isNaN(rectMin)){
                         rectMax = d3.max(data, function(d){return +d[cc];});
                         rectMin = d3.min(data, function(d){return +d[cc];});
                       }
-                      scalable3(rectMin, rectMax, binSize);
+                      scalable3(rectMin, rectMax, binSize);*/
                     });
                   }
                 });
@@ -683,13 +699,80 @@ HTMLWidgets.widget({
 
   // allows user to change binSize by clicking on the binSize output label
         d3.select(".binSelect").on("click", function(){
-          binInSig += 1;
-            if(binInSig>=1){
-              var binInput = d3.select(el).append("input")
-                                .attr("class", 'binIn')
-                                .style("right", "-" + d3.select('.binSelect').attr("x") + "px");
-            }
+          minInSig = 0;
+          maxInSig = 0;
+          binInSig = 1;
+          if(binInSig===1){
+            d3.select(".binSelect").style("opacity", 0);
+            var binInput = d3.select(el).append("input")
+                              .attr("class", 'binIn')
+                              .style("right", "-" + d3.select('.binSelect').attr("x") + "px");
+          }
+          d3.select('.minIn').remove();
+          d3.select(".minYtxt").style("opacity", 1);
+          d3.select(".maxIn").remove();
+          d3.select(".maxYtxt").style("opacity", 1);
         });
+
+        d3.select(".maxYtxt").on("click", function(){
+          minInSig = 0;
+          binInSig = 0;
+          maxInSig = 1;
+          if(maxInSig===1){
+            d3.select(".maxYtxt").style("opacity", 0);
+            maxInput = d3.select(el).append("input")
+                              .attr("class", 'maxIn')
+                              .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+          }
+          d3.select('.minIn').remove();
+          d3.select(".minYtxt").style("opacity", 1);
+          d3.select(".binIn").remove();
+          d3.select(".binSelect").style("opacity", 1);
+        });
+
+        d3.select(".minYtxt").on("click", function(){
+          binInSig = 0;
+          maxInSig = 0;
+          minInSig = 1;
+          if(minInSig===1){
+            d3.select(".minYtxt").style("opacity", 0);
+            minInput = d3.select(el).append("input")
+                              .attr("class", 'minIn')
+                              .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
+          }
+          d3.select('.maxIn').remove();
+          d3.select(".maxYtxt").style("opacity", 1);
+          d3.select(".binIn").remove();
+          d3.select(".binSelect").style("opacity", 1);
+        });
+
+        /*d3.select(".binSelect").on("click", function(){
+            binInSig += 1;
+            if(binInSig===1){
+              d3.select(".binSelect").style("opacity", 0);
+              var binIn = d3.select(el).append("input")
+                                .attr("class", 'maxIn')
+                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+              if(minInSig>=1){
+                d3.select('.minIn').remove();
+                d3.select(".minYtxt").style("opacity", 1);
+                minInSig = 0;
+              }
+            } else if(maxInSig===2){
+              if(minInSig>=1){
+                d3.select('.minIn').remove();
+                d3.select(".minYtxt").style("oppacity", 1)
+                minInSig = 0;
+              }
+              d3.select('.maxIn').remove()
+              d3.select(".maxYtxt").style("opacity", 0);
+              maxInput = d3.select(el).append("input")
+                                .attr("class", 'maxIn')
+                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+            } else{
+              maxInSig = 1;
+            }
+        });*/
 
 
 // HAZARD Plotting -------------------------------------------------------------
@@ -736,31 +819,31 @@ HTMLWidgets.widget({
 
 // BEGIN VERY MESSY LEGEND CODE ------------------------------------------------
 
-/*// sets location and color of time and marker window legend
+// sets location and color of time and marker window legend
         svghud.append("rect")
-                .attr("x", 3*pad)
+                .attr("x", pad*6)
                 .attr("y", pad/4)
-                .attr("width", w/2.35)
+                .attr("width", w/2 + 2*pad - (w/3.9 + pad*2.5))
                 .attr("height", h/10)
                 .style("fill", "gray")
                 .style("fill-opacity", "0.4");
-// text elements for time window legend
+/*// text elements for time window legend
         svghud.append("text")
                 .attr("x", pad*3.3)
                 .attr("y", 30)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
-                .text("time window: 2 years");
+                .text("time window: 2 years");*/
 // text elements for marker window legend
         svghud.append("text")
                 .attr("class", "hudtxt")
-                .attr("x", w/3.9 + 2*pad)
+                .attr("x", pad*6.3)
                 .attr("y", 30)
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
-                .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));*/
+                .text("marker window: " +  d3.round(mxtocov(mouse[0]), 2));
 // styles for points in scatterplot
         svghud.selectAll("legenddots")
                 .data([15,35])
@@ -904,13 +987,13 @@ HTMLWidgets.widget({
               yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
     // circles are plotted based on new y scale values
               scat.selectAll("circle")
-                      .transition().duration(1000)
+                      .transition().duration(500)
                       .attr("cy", function(d){return yScale(+d[cc]);});
               scat.select("text.y.label")
                       .text(cc);
     // y axis is plotted in scatterplot based on new variable selection
               scat.select(".y.axis")
-                      .transition().duration(1000)
+                      .transition().duration(500)
                       .call(yAxis);
           });
   // ELSE if dropdown
@@ -934,12 +1017,12 @@ HTMLWidgets.widget({
                   .range([0, h-pad*3]);
               yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(10);
               scat.selectAll("circle")
-                      .transition().duration(1000)
+                      .transition().duration(500)
                       .attr("cy", function(d){return yScale(+d[cc]);});
                scat.select("text.y.label")
                       .text(cc);
               scat.select(".y.axis")
-                      .transition().duration(1000)
+                      .transition().duration(500)
                       .call(yAxis);
           });
           }
@@ -947,7 +1030,7 @@ HTMLWidgets.widget({
 // CLICKING INPUTS -------------------------------------------------------------
 
 // sets input fields for variables
-        d3.select(".minYtxt").on("click", function(){
+        /*d3.select(".minYtxt").on("click", function(){
             minInSig += 1;
             if(minInSig===1){
               d3.select(".minYtxt").style("opacity", 0);
@@ -1001,24 +1084,21 @@ HTMLWidgets.widget({
             } else{
               maxInSig = 1;
             }
-        });
+        });*/
 
         d3.select(".scatter").on("click", function(){
           d3.select(".minYtxt").style("opacity", 1);
           d3.select(".maxYtxt").style("opacity", 1);
+          d3.select(".binSelect").style("opacity", 1);
+          d3.select('.maxIn').remove()
+          d3.select('.minIn').remove()
+          d3.select('.binIn').remove()
           if(freeze === 0){
             freeze = 1;
             scalable();
           }
           else{
             freeze = 0;
-          }
-          if(maxInSig>0){
-            d3.select('.maxIn').remove()
-          } else if (minInSig>0){
-            d3.select('.minIn').remove()
-          } else if (binInSig>0){
-            d3.select('.binIn').remove()
           }
           maxInSig = 0;
           minInSig = 0;
@@ -1032,8 +1112,14 @@ HTMLWidgets.widget({
           rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
           rectMin = parseFloat(d3.select("text.minYtxt").text().split(" ")[4]);
           binVal = parseFloat(d3.select("text.binSelect").text().split(" ")[4]);
+          if(isNaN(rectMax) && isNaN(rectMin)){
+            rectMax = d3.max(data, function(d){return +d[cc];});
+            rectMin = d3.min(data, function(d){return +d[cc];});
+          } else if(isNaN(binVal)){
+            binVal = d3.round(binSize,2);
+          }
           // ENTER key has the keyCode 13
-          if (d3.event.keyCode === 13 && maxInSig >= 1) {
+          if (d3.event.keyCode === 13 && maxInSig === 1) {
             if(d3.select(".maxIn").node().value == ''){
               change = parseFloat(yScale(rectMax));
               hchange = covtoh(rectMax - rectMin);
@@ -1055,7 +1141,7 @@ HTMLWidgets.widget({
                   rectMax.toFixed(2));
             scalable2(rectMin, rectMax);
             return rectMax;
-          } else if (d3.event.keyCode === 13 && minInSig >= 1) {
+          } else if (d3.event.keyCode === 13 && minInSig === 1) {
             if(d3.select(".minIn").node().value == ''){
               hchange = parseFloat(covtoh(rectMax - rectMin));
             } else{
@@ -1075,7 +1161,7 @@ HTMLWidgets.widget({
                   rectMin.toFixed(2));
             scalable2(rectMin, rectMax);
             return rectMin;
-          } else if(d3.event.keyCode === 13 && binInSig>=1) {
+          } else if(d3.event.keyCode === 13 && binInSig===1) {
             if(d3.select(".binIn").node().value === ''){
               binSize = binVal;
             } else{
@@ -1087,6 +1173,47 @@ HTMLWidgets.widget({
               .style("opacity", 1);
             svg.select("text.binSelect")
                   .text("Bin Size : " + binSize);
+
+            d3.select(".epline").remove();
+
+            epData = [];
+
+            nTimes = binMax * 100;
+
+            for (var i = -nTimes; i <= nTimes; i++) {;
+              u = i/100;
+              newU = epFunc(u);
+              var epT = (1 - newU);
+              epData.push([i, epT]);
+            }
+
+            var xC = binSize * nTimes;
+
+            var xScaleEp = d3.scale.linear()
+                .domain([-nTimes, nTimes])
+                .range([w + pad*3, w + pad*3 + 300]);
+
+            var epMin = d3.min(epData, function(d){return d[1];});
+            var epMax = d3.max(epData, function(d){return d[1];});
+
+            var yScaleEp = d3.scale.linear()
+                //.domain([epMax>=1 ? epMin : 0, epMax])
+                .domain([epMin, epMax])
+                .range([215, 370]);
+
+            var epKern = d3.svg.line()
+                .x(function(d){return xScaleEp(d[0]);})
+                .y(function(d){return yScaleEp(d[1]);});
+
+            svg.append("path")
+                    .datum(epData)
+                    .attr("class", "epline")
+                    .style("stroke", "rgba(255,90,0,1)")
+                    .style("stroke-width", "4px")
+                    .style("fill-opacity","0")
+                    .attr("d", epKern);
+            console.log(binSize);
+
             scalable3(rectMin, rectMax, binSize);
             return binSize;
           }

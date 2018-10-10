@@ -54,16 +54,7 @@ pbc5 <- pbc \%>\%
     protime = log(protime))
 ihazr(time=pbc5[,1], status=pbc5[,2], marker=pbc5[,3:7])
 
-Example 3 - Drop down selector
-library(survival)
-library(dplyr)
-pbc5 <- pbc \%>\%
- slice(1:312) \%>\%
- mutate(time = time/365, status = (status==2)*1, bili = log(bili),
-   protime = log(protime))
-ihazr(time=pbc5[,2], status=pbc5[,3], marker=pbc5[,4:20], buttons = F)
-
-Example 4 - in a Shiny app
+Example 3 - in a Shiny app
 library(shiny)
 library(survival)
 library(dplyr)
@@ -80,52 +71,10 @@ shinyApp(
   }
 )
 
-Example 5 -- cancer
-library(survival)
-library(dplyr)
-can <- cancer \%>\%
-  mutate(time = time/365, status = (status==2)*1, sex = (sex==2)*1)
-ihazr(time=can[,2], status=can[,3], marker=can[,-c(2,3)], buttons = F)
-
-Example 6 -- cgd
-library(survival)
-library(dplyr)
-cgd2 <- cgd \%>\%
-  mutate(time = tstop/365)
-ihazr(time=cgd2$time, status=cgd2$status, marker=cgd2[,c(2,4:12,14)], buttons = F)
-
-Example 7 -- heart
-library(survival)
-library(dplyr)
-heart2 <- heart \%>\%
-  mutate(time = stop/365)
-ihazr(time=heart2$time, status=heart2$event, marker=heart2[,4:7], buttons = T)
-
-Example 8 -- kidney
-library(survival)
-library(dplyr)
-kid <- kidney \%>\%
-  mutate(time = time/365)
-ihazr(time=kid$time, status=kid$status, marker=kid[,4:7], buttons = T)
-
-Example 9 -- lung
-library(survival)
-library(dplyr)
-lung2 <- lung \%>\%
-  mutate(time = time/365)
-ihazr(time=lung2$time, status=lung2$status, marker=lung2[,c(1,4:10)], buttons = F)
-
-Example 10 -- mgus
-library(survival)
-library(dplyr)
-mgusN <- mgus \%>\%
-  mutate(time = futime/365)
-ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2,3,5,9:12)], buttons = F)
-
-Example 11 -- mgus2
+Example 4 -- mgus2
 library(survival)
 library(dplyr)
 mgusN <- mgus2 \%>\%
   mutate(time = futime/12)
-ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2:6,8)], buttons = F)
+ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2:6,8)], buttons = F, binMax=8)
 }
