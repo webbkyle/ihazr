@@ -4,8 +4,8 @@
 \alias{ihazr}
 \title{ihazr}
 \usage{
-ihazr(time, status, marker, width = NULL, height = NULL,
-  buttons = TRUE)
+ihazr(time, status, marker, buttons = TRUE, binMax = 10,
+  width = NULL, height = NULL)
 }
 \arguments{
 \item{time}{A numerical vector of time data.}
@@ -15,6 +15,12 @@ ihazr(time, status, marker, width = NULL, height = NULL,
 \item{marker}{A collection of numerical variables of interest for survival
 analysis.}
 
+\item{buttons}{Boolean argument to decide if buttons or a drop down feature
+will be used for variable selection. The default is set to TRUE.}
+
+\item{binMax}{The maximum bin size for non parametric Epinechnikov hazard function.
+This will only need to be changed for visualizing the kernel.}
+
 \item{width}{The width of the html widget. The default is NULL, which results
 in intelligent automatic sizing based on the widget's container.}
 
@@ -22,13 +28,14 @@ in intelligent automatic sizing based on the widget's container.}
 results in intelligent automatic sizing based on the widget's container.}
 }
 \value{
-ihazr of data values \code{time}, \code{status}, and \code{marker}
+ihazr interactive session for data values \code{time}, \code{status}, and \code{marker}
 }
 \description{
 \code{ihazr} interactively updates a hazard function for survival anaylisis.
 This function creates an HTML widget for survival data. The widget allows the
 user to choose subsections of their data and plot the nonparametric kernel
-estimated hazard function and cumulative hazard function.
+estimated hazard function and cumulative hazard function. Bin size selection
+for the Epinechnikov kernel is also made available for the user.
 }
 \examples{
 Example 1 - simulated data
@@ -72,4 +79,53 @@ shinyApp(
       )
   }
 )
+
+Example 5 -- cancer
+library(survival)
+library(dplyr)
+can <- cancer \%>\%
+  mutate(time = time/365, status = (status==2)*1, sex = (sex==2)*1)
+ihazr(time=can[,2], status=can[,3], marker=can[,-c(2,3)], buttons = F)
+
+Example 6 -- cgd
+library(survival)
+library(dplyr)
+cgd2 <- cgd \%>\%
+  mutate(time = tstop/365)
+ihazr(time=cgd2$time, status=cgd2$status, marker=cgd2[,c(2,4:12,14)], buttons = F)
+
+Example 7 -- heart
+library(survival)
+library(dplyr)
+heart2 <- heart \%>\%
+  mutate(time = stop/365)
+ihazr(time=heart2$time, status=heart2$event, marker=heart2[,4:7], buttons = T)
+
+Example 8 -- kidney
+library(survival)
+library(dplyr)
+kid <- kidney \%>\%
+  mutate(time = time/365)
+ihazr(time=kid$time, status=kid$status, marker=kid[,4:7], buttons = T)
+
+Example 9 -- lung
+library(survival)
+library(dplyr)
+lung2 <- lung \%>\%
+  mutate(time = time/365)
+ihazr(time=lung2$time, status=lung2$status, marker=lung2[,c(1,4:10)], buttons = F)
+
+Example 10 -- mgus
+library(survival)
+library(dplyr)
+mgusN <- mgus \%>\%
+  mutate(time = futime/365)
+ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2,3,5,9:12)], buttons = F)
+
+Example 11 -- mgus2
+library(survival)
+library(dplyr)
+mgusN <- mgus2 \%>\%
+  mutate(time = futime/12)
+ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2:6,8)], buttons = F)
 }
