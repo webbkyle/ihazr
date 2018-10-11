@@ -94,11 +94,51 @@ p{
   cursor:normal;
 }
 svg{
-    cursor:crosshair;
+    cursor: normal;
 }
-svg.button{
+.button{
     cursor: pointer;
 }
-svg.scatter{
-    cursor: ew-resize;
+.scatter{
+    cursor: crosshair;
 }
+.out{
+  cursor: normal;
+  float: right;
+}
+.DD{
+    width: 300px;
+    height: 50px;
+    font-size: 26px;
+    font-family: sans-serif;
+    display: block;
+    cursor: normal;
+    position: relative;
+    right: -50px;
+}
+form {
+  float: right;
+}
+input{
+    width: 150px;
+    height: 30px;
+    font-size: 18px;
+    font-family: sans-serif;
+    display: block;
+    cursor: normal;
+    position: relative;
+}
+.minIn{
+    top: -1297.5px;
+    /*top: -1347.5px;*/
+}
+.maxIn{
+    top: -1347.5px;
+    /*top: -1297.5px;*/
+}
+.binIn{
+    top: -1197.5px;
+    /*top: -1297.5px;*/
+}
+
+

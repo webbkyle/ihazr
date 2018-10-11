@@ -2,10 +2,46 @@
 % Please edit documentation in R/ihazr.R
 \name{ihazrOutput}
 \alias{ihazrOutput}
+<<<<<<< HEAD
 \title{Widget output function for use in Shiny}
 \usage{
 ihazrOutput(outputId, width = "100\%", height = "400px")
 }
 \description{
 Widget output function for use in Shiny
+=======
+\title{ihazrOutput}
+\usage{
+ihazrOutput(outputId, width = "100\%", height = "400px")
+}
+\arguments{
+\item{outputId}{The rendered output name.}
+
+\item{width}{The percent width of the screen used for the Shiny App.}
+
+\item{height}{Height of the Shiny App in pixels.}
+}
+\description{
+\code{ihazrOutput} produces a Shiny widget with the same characteristics as the
+locally hosted output from \code{ihazr}.
+}
+\examples{
+\dontrun{
+#Example - ihazr in a Shiny app
+library(shiny)
+library(survival)
+library(dplyr)
+pbc5 <- pbc \%>\% slice(1:312) \%>\%
+      select(time, status, age, edema, bili, albumin, protime) \%>\%
+      mutate(time = time/365, status = (status==2)*1, bili = log(bili),
+        protime = log(protime))
+shinyApp(
+  ui = ihazrOutput("test"),
+  server = function(input, output) {
+    output$test <- renderIhazr(
+      ihazr(time=pbc5[,1], status=pbc5[,2], marker=pbc5[,3:7])
+      )
+  }
+)}
+>>>>>>> b1
 }

@@ -1,9 +1,24 @@
 Package: ihazr
-Title: R Interface to Generate Interactive Hazard Regression Plots
+Title: Survival Data Visualization and Non-Parametric Hazard Estimation using D3
 Version: 0.1.0
-Authors@R: person("C. Jason", "Liang", , "liangcj@gmail.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph)
+Date: 2018-10-31
+Authors@R: c(
+    person("C. Jason", "Liang", , "liangcj@gmail.com", role = c("aut", "cre")),
+    person("Kyle", "Webb", , "kylepwebb1992@gmail.com", role = "aut"))
+Description: ihazr stands for Interactive Hazard Regression. 
+    This package enables the user to invetigate their data through the htmlwidgets 
+    package and D3.js. The user can create scatterplots and cumulative hazarad 
+    plots for their survival data over all covariates of interest.
+    A nonparametric hazard estimation is also plotted and bandwidth can be 
+    changed for the Epinechnikov kernel. 
+    The ihazr package is a useful tool for any sort of preliminary survival 
+    analysis and estimation. 
+BugReports: https://github.com/liangcj/ihazr/issues
 Depends: R (>= 3.2.0)
-License: MIT
+License: MIT + file LICENSE
+Imports: htmlwidgets (>= 0.8)
+Suggests: dplyr (>= 0.7.5), 
+          shiny (>= 1.0.0),
+          survival (>= 2.42)
 LazyData: true
 RoxygenNote: 6.1.0

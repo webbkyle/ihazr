@@ -2,10 +2,82 @@
 % Please edit documentation in R/ihazr.R
 \name{ihazr}
 \alias{ihazr}
+<<<<<<< HEAD
 \title{<Add Title>}
 \usage{
 ihazr(time, status, marker, width = NULL, height = NULL)
 }
 \description{
 <Add Description>
+=======
+\title{ihazr}
+\usage{
+ihazr(time, status, marker, buttons = TRUE, bandMax = 10,
+  width = NULL, height = NULL)
+}
+\arguments{
+\item{time}{A numerical vector of time data.}
+
+\item{status}{A binary vector representing event or no event.}
+
+\item{marker}{A collection of numerical variables of interest for survival
+analysis.}
+
+\item{buttons}{Boolean argument to decide if buttons or a drop down feature
+will be used for variable selection. The default is to use buttons (TRUE).}
+
+\item{bandMax}{The maximum bandwidth for the non parametric Epinechnikov hazard function.
+This will only need to be changed for visualizing the kernel.}
+
+\item{width}{The width of the html widget. The default is NULL, which results
+in intelligent automatic sizing based on the widget's container.}
+
+\item{height}{The height of the html widget. The default is NULL, which
+results in intelligent automatic sizing based on the widget's container.}
+}
+\value{
+ihazr interactive session for data values \code{time}, \code{status}, and \code{marker}
+}
+\description{
+\code{ihazr} interactively updates a hazard function for survival anaylisis.
+This function creates an HTML widget for survival data. The widget allows the
+user to choose subsections of their data and plot the nonparametric kernel
+estimated hazard function and cumulative hazard function. Bandwidth selection
+for the Epanechnikov kernel is also made available for the user.
+}
+\details{
+ihazr implements the Epanechnikov kernel for non-parametric hazard estimation
+  with user defined bandwidth and the Nelson-Aalen estimator for the cumulative hazard rate. \cr \cr
+  ihazr user interface: \cr
+  - Move cursor over the scatterplot to subset data and click to freeze/unfreeze the selection. \cr
+  - Click on buttons or options in a dropdown to select different covariates. \cr
+  - Double-click Maximum, Minimum, or Bandwidth text boxes to input numerical values.
+    Press Enter to commit the value. Click on the scatterplot to clear the input box. \cr
+  - Mouseover the black bar below the Epanechnikov kernel to change the kernel's bandwidth.
+    Click to freeze/unfreeze the bandwidth selection.
+}
+\examples{
+#Example 1 - simulated data
+time_t <- runif(50, 0, 10)
+status_t <- rbinom(50, 1, .7)
+age_t <- runif(50, 20, 80)
+ihazr(time_t, status_t, age_t)
+
+#Example 2 - with survival data
+library(survival)
+library(dplyr)
+pbc5 <- pbc \%>\%
+  slice(1:312) \%>\%
+  select(time, status, age, edema, bili, albumin, protime) \%>\%
+  mutate(time = time/365, status = (status==2)*1, bili = log(bili),
+    protime = log(protime))
+ihazr(time=pbc5[,1], status=pbc5[,2], marker=pbc5[,3:7])
+
+#Example 3 -- mgus2
+library(survival)
+library(dplyr)
+mgusN <- mgus2 \%>\%
+  mutate(time = futime/12)
+ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2:6,8)], buttons = FALSE, bandMax=8)
+>>>>>>> b1
 }
