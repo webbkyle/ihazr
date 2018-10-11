@@ -2,14 +2,6 @@
 % Please edit documentation in R/ihazr.R
 \name{ihazrOutput}
 \alias{ihazrOutput}
-<<<<<<< HEAD
-\title{Widget output function for use in Shiny}
-\usage{
-ihazrOutput(outputId, width = "100\%", height = "400px")
-}
-\description{
-Widget output function for use in Shiny
-=======
 \title{ihazrOutput}
 \usage{
 ihazrOutput(outputId, width = "100\%", height = "400px")
@@ -43,5 +35,4 @@ shinyApp(
       )
   }
 )}
->>>>>>> b1
 }

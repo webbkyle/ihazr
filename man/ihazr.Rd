@@ -2,14 +2,6 @@
 % Please edit documentation in R/ihazr.R
 \name{ihazr}
 \alias{ihazr}
-<<<<<<< HEAD
-\title{<Add Title>}
-\usage{
-ihazr(time, status, marker, width = NULL, height = NULL)
-}
-\description{
-<Add Description>
-=======
 \title{ihazr}
 \usage{
 ihazr(time, status, marker, buttons = TRUE, bandMax = 10,
@@ -79,5 +71,4 @@ library(dplyr)
 mgusN <- mgus2 \%>\%
   mutate(time = futime/12)
 ihazr(time=mgusN$time, status=mgusN$death, marker=mgusN[,c(2:6,8)], buttons = FALSE, bandMax=8)
->>>>>>> b1
 }

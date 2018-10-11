@@ -2,14 +2,6 @@
 % Please edit documentation in R/ihazr.R
 \name{renderIhazr}
 \alias{renderIhazr}
-<<<<<<< HEAD
-\title{Widget render function for use in Shiny}
-\usage{
-renderIhazr(expr, env = parent.frame(), quoted = FALSE)
-}
-\description{
-Widget render function for use in Shiny
-=======
 \title{renderIhazr}
 \usage{
 renderIhazr(expr, env = parent.frame(), quoted = FALSE)
@@ -43,5 +35,4 @@ shinyApp(
       )
   }
 )}
->>>>>>> b1
 }
