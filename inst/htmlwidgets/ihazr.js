@@ -34,7 +34,7 @@ HTMLWidgets.widget({
          buttonTextSize = Math.min(Math.floor(buttonWidth / 6), 26),
     // Bin size default setting is 2 unless the binMax argument is less than 2
     // Bin max default is 10
-         binMax = x.settings.binMax,
+         binMax = x.settings.bandMax,
          binSize = Math.min(2, binMax),
     // empty variables for button or dropdown display
          svgbut,
@@ -176,7 +176,7 @@ HTMLWidgets.widget({
       };
     }
 
-    // calculates the epinechnikov kernel values
+    // calculates the epanechnikov kernel values
     function epFunc(u){
       return Math.abs(u /= binSize) <= 1 ? 0.75 * (1 - u * u) / binSize : 0;
     }
@@ -465,10 +465,10 @@ HTMLWidgets.widget({
   // creates large white rectangle for cursor=crosshair area
         scat.append("rect")
                 .attr("class", "whiteRect")
-                .attr("x", 2*pad)
+                .attr("x", pad)
                 .attr("y", 0)
                 .attr("height", h)
-                .attr("width", w)
+                .attr("width", w - pad)
                 .attr("fill", "white");
 
   // makes circles visible in the scatterplot graph
@@ -559,9 +559,9 @@ HTMLWidgets.widget({
                 .style("fill", "rgb(50,50,50")
                 .style("font-family", "Arial")
                 .style("font-size", "18px")
-                .text("Bin Size : " + binSize);
+                .text("Bandwidth : " + binSize);
 
-// EPINECHNIKOV bin size interactivity -----------------------------------------
+// EPANECHNIKOV bin size interactivity -----------------------------------------
 
   // creates rectangle for bin selection interaction
         svg.append("rect")
@@ -585,7 +585,7 @@ HTMLWidgets.widget({
 
   // value for max of xscale
         var xC = binSize * nTimes;
-  // x scale for epinechnikov bandwidth selector
+  // x scale for epanechnikov bandwidth selector
         var xScaleEp = d3.scale.linear()
             .domain([-nTimes, nTimes])
             .range([w + pad*3, w + pad*3 + 300]);
@@ -668,7 +668,7 @@ HTMLWidgets.widget({
 
                     // output text for binSize selected
                     svg.select("text.binSelect")
-                        .text("Bin Size : " + d3.round(binSize,2));
+                        .text("Bandwidth : " + d3.round(binSize,2));
 
                     rectMax = parseFloat(d3.select("text.maxYtxt").text().split(" ")[4]);
                     rectMin = parseFloat(d3.select("text.minYtxt").text().split(" ")[4]);
@@ -1172,7 +1172,7 @@ HTMLWidgets.widget({
             d3.select(".binSelect")
               .style("opacity", 1);
             svg.select("text.binSelect")
-                  .text("Bin Size : " + binSize);
+                  .text("Bandwidth : " + binSize);
 
             d3.select(".epline").remove();
 

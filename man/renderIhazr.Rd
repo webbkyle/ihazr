@@ -2,10 +2,37 @@
 % Please edit documentation in R/ihazr.R
 \name{renderIhazr}
 \alias{renderIhazr}
-\title{Widget render function for use in Shiny}
+\title{renderIhazr}
 \usage{
 renderIhazr(expr, env = parent.frame(), quoted = FALSE)
 }
+\arguments{
+\item{expr}{An expression using the \code{ihazr} function.}
+
+\item{env}{The environment in which to evaluate \code{expr}.}
+
+\item{quoted}{Whether \code{expr} is quoted or not.}
+}
 \description{
-Widget render function for use in Shiny
+\code{renderIhazr} produces a Shiny widget with the same characteristics as the
+locally hosted output from \code{ihazr}.
+}
+\examples{
+\dontrun{
+#Example - ihazr in a Shiny app
+library(shiny)
+library(survival)
+library(dplyr)
+pbc5 <- pbc \%>\% slice(1:312) \%>\%
+      select(time, status, age, edema, bili, albumin, protime) \%>\%
+      mutate(time = time/365, status = (status==2)*1, bili = log(bili),
+        protime = log(protime))
+shinyApp(
+  ui = ihazrOutput("test"),
+  server = function(input, output) {
+    output$test <- renderIhazr(
+      ihazr(time=pbc5[,1], status=pbc5[,2], marker=pbc5[,3:7])
+      )
+  }
+)}
 }
