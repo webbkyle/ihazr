@@ -964,6 +964,7 @@ HTMLWidgets.widget({
                               .attr("class", 'binIn')
                               .style("right", "-" + d3.select('.binSelect').attr("x") + "px");
           } else{
+            binInSig -= 1;
             return;
           }
           d3.select('.minIn').remove();
@@ -983,6 +984,7 @@ HTMLWidgets.widget({
                               .attr("class", 'maxIn')
                               .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
           } else{
+            maxInSig -= 1;
             return;
           }
           d3.select('.minIn').remove();
@@ -1002,6 +1004,7 @@ HTMLWidgets.widget({
                               .attr("class", 'minIn')
                               .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
           } else{
+            minInSig -= 1;
             return;
           }
           d3.select('.maxIn').remove();
