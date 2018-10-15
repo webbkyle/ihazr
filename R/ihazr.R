@@ -129,7 +129,7 @@ ihazrOutput <- function(outputId, width = '100%', height = '400px'){
 #' locally hosted output from \code{ihazr}.
 #'
 #' @import htmlwidgets
-#' @param expr An expression using the \code{ihazr} function.
+#' @param expr An expression in the form of the \code{ihazr} function.
 #' @param env The environment in which to evaluate \code{expr}.
 #' @param quoted Whether \code{expr} is quoted or not.
 #' @examples

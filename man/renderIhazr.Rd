@@ -7,7 +7,7 @@
 renderIhazr(expr, env = parent.frame(), quoted = FALSE)
 }
 \arguments{
-\item{expr}{An expression using the \code{ihazr} function.}
+\item{expr}{An expression in the form of the \code{ihazr} function.}
 
 \item{env}{The environment in which to evaluate \code{expr}.}
 

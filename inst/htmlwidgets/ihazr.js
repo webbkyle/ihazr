@@ -697,83 +697,6 @@ HTMLWidgets.widget({
                 });
         });
 
-  // allows user to change binSize by clicking on the binSize output label
-        d3.select(".binSelect").on("click", function(){
-          minInSig = 0;
-          maxInSig = 0;
-          binInSig = 1;
-          if(binInSig===1){
-            d3.select(".binSelect").style("opacity", 0);
-            var binInput = d3.select(el).append("input")
-                              .attr("class", 'binIn')
-                              .style("right", "-" + d3.select('.binSelect').attr("x") + "px");
-          }
-          d3.select('.minIn').remove();
-          d3.select(".minYtxt").style("opacity", 1);
-          d3.select(".maxIn").remove();
-          d3.select(".maxYtxt").style("opacity", 1);
-        });
-
-        d3.select(".maxYtxt").on("click", function(){
-          minInSig = 0;
-          binInSig = 0;
-          maxInSig = 1;
-          if(maxInSig===1){
-            d3.select(".maxYtxt").style("opacity", 0);
-            maxInput = d3.select(el).append("input")
-                              .attr("class", 'maxIn')
-                              .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
-          }
-          d3.select('.minIn').remove();
-          d3.select(".minYtxt").style("opacity", 1);
-          d3.select(".binIn").remove();
-          d3.select(".binSelect").style("opacity", 1);
-        });
-
-        d3.select(".minYtxt").on("click", function(){
-          binInSig = 0;
-          maxInSig = 0;
-          minInSig = 1;
-          if(minInSig===1){
-            d3.select(".minYtxt").style("opacity", 0);
-            minInput = d3.select(el).append("input")
-                              .attr("class", 'minIn')
-                              .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
-          }
-          d3.select('.maxIn').remove();
-          d3.select(".maxYtxt").style("opacity", 1);
-          d3.select(".binIn").remove();
-          d3.select(".binSelect").style("opacity", 1);
-        });
-
-        /*d3.select(".binSelect").on("click", function(){
-            binInSig += 1;
-            if(binInSig===1){
-              d3.select(".binSelect").style("opacity", 0);
-              var binIn = d3.select(el).append("input")
-                                .attr("class", 'maxIn')
-                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
-              if(minInSig>=1){
-                d3.select('.minIn').remove();
-                d3.select(".minYtxt").style("opacity", 1);
-                minInSig = 0;
-              }
-            } else if(maxInSig===2){
-              if(minInSig>=1){
-                d3.select('.minIn').remove();
-                d3.select(".minYtxt").style("oppacity", 1)
-                minInSig = 0;
-              }
-              d3.select('.maxIn').remove()
-              d3.select(".maxYtxt").style("opacity", 0);
-              maxInput = d3.select(el).append("input")
-                                .attr("class", 'maxIn')
-                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
-            } else{
-              maxInSig = 1;
-            }
-        });*/
-
 
 // HAZARD Plotting -------------------------------------------------------------
 
@@ -1029,63 +952,66 @@ HTMLWidgets.widget({
 
 // CLICKING INPUTS -------------------------------------------------------------
 
-// sets input fields for variables
-        /*d3.select(".minYtxt").on("click", function(){
-            minInSig += 1;
-            if(minInSig===1){
-              d3.select(".minYtxt").style("opacity", 0);
-              var minInput = d3.select(el).append("input")
-                                .attr("class", 'minIn')
-                                .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
-              if(maxInSig>=1){
-                d3.select('.maxIn').remove();
-                d3.select(".maxYtxt").style("opacity", 1);
-                maxInSig = 0;
-              }
-            } else if(minInSig===2){
-              if(maxInSig>=1){
-                d3.select('.maxIn').remove();
-                d3.select(".maxYtxt").style("oppacity", 1)
-                maxInSig = 0;
-              }
-              d3.select('.minIn').remove();
-              d3.select(".minYtxt").style("opacity", 0);
-              minInput = d3.select(el).append("input")
-                                .attr("class", 'minIn')
-                                .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
-            } else{
-              minInSig = 1;
-            }
+
+        // allows user to change binSize by clicking on the input
+        d3.select(".binSelect").on("click", function(){
+          minInSig = 0;
+          maxInSig = 0;
+          binInSig += 1;
+          if(binInSig===1){
+            d3.select(".binSelect").style("opacity", 0);
+            var binInput = d3.select(el).append("input")
+                              .attr("class", 'binIn')
+                              .style("right", "-" + d3.select('.binSelect').attr("x") + "px");
+          } else{
+            return;
+          }
+          d3.select('.minIn').remove();
+          d3.select(".minYtxt").style("opacity", 1);
+          d3.select(".maxIn").remove();
+          d3.select(".maxYtxt").style("opacity", 1);
         });
 
+        // allows user to change maximum y value by clicking on the input
         d3.select(".maxYtxt").on("click", function(){
-            maxInSig += 1;
-            if(maxInSig===1){
-              d3.select(".maxYtxt").style("opacity", 0);
-              var maxInput = d3.select(el).append("input")
-                                .attr("class", 'maxIn')
-                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
-              if(minInSig>=1){
-                d3.select('.minIn').remove();
-                d3.select(".minYtxt").style("opacity", 1);
-                minInSig = 0;
-              }
-            } else if(maxInSig===2){
-              if(minInSig>=1){
-                d3.select('.minIn').remove();
-                d3.select(".minYtxt").style("oppacity", 1)
-                minInSig = 0;
-              }
-              d3.select('.maxIn').remove()
-              d3.select(".maxYtxt").style("opacity", 0);
-              maxInput = d3.select(el).append("input")
-                                .attr("class", 'maxIn')
-                                .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
-            } else{
-              maxInSig = 1;
-            }
-        });*/
+          minInSig = 0;
+          binInSig = 0;
+          maxInSig += 1;
+          if(maxInSig===1){
+            d3.select(".maxYtxt").style("opacity", 0);
+            var maxInput = d3.select(el).append("input")
+                              .attr("class", 'maxIn')
+                              .style("right", "-" + d3.select('.maxYtxt').attr("x") + "px");
+          } else{
+            return;
+          }
+          d3.select('.minIn').remove();
+          d3.select(".minYtxt").style("opacity", 1);
+          d3.select(".binIn").remove();
+          d3.select(".binSelect").style("opacity", 1);
+        });
 
+        // allows user to change minimum y value by clicking on the input
+        d3.select(".minYtxt").on("click", function(){
+          binInSig = 0;
+          maxInSig = 0;
+          minInSig += 1;
+          if(minInSig===1){
+            d3.select(".minYtxt").style("opacity", 0);
+            var minInput = d3.select(el).append("input")
+                              .attr("class", 'minIn')
+                              .style("right", "-" + d3.select('.minYtxt').attr("x") + "px");
+          } else{
+            return;
+          }
+          d3.select('.maxIn').remove();
+          d3.select(".maxYtxt").style("opacity", 1);
+          d3.select(".binIn").remove();
+          d3.select(".binSelect").style("opacity", 1);
+        });
+
+        // clicking on the scatterplot clears all inputs and resets input signal
+        // values (InSig's)
         d3.select(".scatter").on("click", function(){
           d3.select(".minYtxt").style("opacity", 1);
           d3.select(".maxYtxt").style("opacity", 1);
@@ -1139,6 +1065,7 @@ HTMLWidgets.widget({
             svg.select("text.maxYtxt")
                   .text("Maximum " + cc + " :  " +
                   rectMax.toFixed(2));
+            maxInSig = 0;
             scalable2(rectMin, rectMax);
             return rectMax;
           } else if (d3.event.keyCode === 13 && minInSig === 1) {
@@ -1160,6 +1087,7 @@ HTMLWidgets.widget({
                   .text("Minimum " + cc + " :  " +
                   rectMin.toFixed(2));
             scalable2(rectMin, rectMax);
+            minInSig = 0;
             return rectMin;
           } else if(d3.event.keyCode === 13 && binInSig===1) {
             if(d3.select(".binIn").node().value === ''){
@@ -1215,6 +1143,7 @@ HTMLWidgets.widget({
             console.log(binSize);
 
             scalable3(rectMin, rectMax, binSize);
+            binInSig = 0;
             return binSize;
           }
         })
