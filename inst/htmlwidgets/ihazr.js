@@ -570,7 +570,9 @@ HTMLWidgets.widget({
                 .attr("y", 380)
                 .attr("height", 50)
                 .attr("width", 300 + pad)
-                .attr("fill", "rgb(50,50,50)");
+                .attr("fill", "gray")
+                .attr("fill-opacity", 0.4);
+                //.attr("fill", "rgb(50,50,50)");
                 //.attr("fill", "white");
 
   // Calculate epData for plotting

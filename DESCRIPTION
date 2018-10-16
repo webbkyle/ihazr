@@ -7,7 +7,7 @@ Authors@R: c(
     person("Kyle", "Webb", , "kylepwebb1992@gmail.com", role = "aut"))
 Description: ihazr stands for Interactive Hazard Regression. 
     This package enables the user to invetigate their data through the htmlwidgets 
-    package and D3.js. The user can create scatterplots and cumulative hazarad 
+    package and JavaScript D3.js. The user can create scatterplots and cumulative hazarad 
     plots for their survival data over all covariates of interest.
     A nonparametric hazard estimation is also plotted and bandwidth can be 
     changed for the Epinechnikov kernel. 
@@ -15,7 +15,7 @@ Description: ihazr stands for Interactive Hazard Regression.
     analysis and estimation. 
 BugReports: https://github.com/liangcj/ihazr/issues
 Depends: R (>= 3.2.0)
-License: MIT + file LICENSE
+License: GPL-2
 Imports: htmlwidgets (>= 0.8)
 Suggests: dplyr (>= 0.7.5), 
           shiny (>= 1.0.0),
