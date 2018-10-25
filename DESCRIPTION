@@ -5,14 +5,14 @@ Date: 2018-10-31
 Authors@R: c(
     person("C. Jason", "Liang", , "liangcj@gmail.com", role = c("aut", "cre")),
     person("Kyle", "Webb", , "kylepwebb1992@gmail.com", role = "aut"))
-Description: ihazr stands for Interactive Hazard Regression. 
-    This package enables the user to invetigate their data through the htmlwidgets 
-    package and JavaScript D3.js. The user can create scatterplots and cumulative hazarad 
-    plots for their survival data over all covariates of interest.
-    A nonparametric hazard estimation is also plotted and bandwidth can be 
-    changed for the Epinechnikov kernel. 
-    The ihazr package is a useful tool for any sort of preliminary survival 
-    analysis and estimation. 
+Description:  ihazr stands for "interative hazard regression." The function can be
+    used as an exploratory analysis tool for survival data. ihazr provides
+    an R user interface for outputting a JavaScript D3.js web application. The
+    user provides a vector of survival times, a vector of censoring statuses, and
+    a matrix (or data.frame or tibble) of marker (covariate) values. The function
+    outputs an interactive application where the user can 1) select which marker
+    to plot against time and 2) graphically resize the time and marker bandwidths
+    for calculating a nonparametric conditional hazard function estimate.
 BugReports: https://github.com/liangcj/ihazr/issues
 Depends: R (>= 3.2.0)
 License: GPL-2
